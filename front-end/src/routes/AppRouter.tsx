@@ -6,6 +6,7 @@ import ProtectedRoute from "./ProtectedRoute";
 const HomePage = lazy(() => import('@/pages/HomePage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 const CataloguePage = lazy(() => import("../pages/CataloguePage"));
+const FaqPage = lazy(() => import("../pages/FaqPage"));
 const CustomerLoginPage = lazy(() => import("../pages/CustomerLoginPage"));
 const CustomerForgotPasswordPage = lazy(() => import("../pages/CustomerForgotPasswordPage"));
 const CustomerRegisterPage = lazy(() => import("../pages/CustomerRegisterPage"));
@@ -29,6 +30,7 @@ export function AppRouter() {
 
 
           <Route path="/catalogue" element={<CataloguePage />} />
+          <Route path="/faq" element={<FaqPage />} />
           <Route path="/customer/login" element={<CustomerLoginPage />} />
           <Route
             path="/customer/forgot-password"

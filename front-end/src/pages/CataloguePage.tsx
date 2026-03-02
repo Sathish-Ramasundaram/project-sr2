@@ -1,94 +1,23 @@
-﻿import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import StoreLogo from '../components/StoreLogo';
 import ThemeToggleButton from '../components/ThemeToggleButton';
 
 type GroceryPrice = {
-  item: string;
+  id: string;
+  name: string;
   quantity: string;
-  priceInRupees: number;
+  price: number;
   category: string;
 };
 
 type PriceSort = 'default' | 'low-to-high' | 'high-to-low';
 
-const groceryPriceList: GroceryPrice[] = [
-  { item: 'Rice', quantity: '1 kg', priceInRupees: 50, category: 'Grains' },
-  { item: 'Egg', quantity: '12', priceInRupees: 72, category: 'Dairy' },
-  {
-    item: 'Tomato',
-    quantity: '1 kg',
-    priceInRupees: 30,
-    category: 'Vegetables',
-  },
-  {
-    item: 'Potato',
-    quantity: '1 kg',
-    priceInRupees: 35,
-    category: 'Vegetables',
-  },
-  {
-    item: 'Onion',
-    quantity: '1 kg',
-    priceInRupees: 40,
-    category: 'Vegetables',
-  },
-  {
-    item: 'Wheat Flour',
-    quantity: '1 kg',
-    priceInRupees: 45,
-    category: 'Grains',
-  },
-  {
-    item: 'Sugar',
-    quantity: '1 kg',
-    priceInRupees: 48,
-    category: 'Essentials',
-  },
-  { item: 'Salt', quantity: '1 kg', priceInRupees: 20, category: 'Essentials' },
-  { item: 'Milk', quantity: '1 liter', priceInRupees: 56, category: 'Dairy' },
-  { item: 'Curd', quantity: '500 g', priceInRupees: 35, category: 'Dairy' },
-  { item: 'Paneer', quantity: '200 g', priceInRupees: 90, category: 'Dairy' },
-  {
-    item: 'Cooking Oil',
-    quantity: '1 liter',
-    priceInRupees: 145,
-    category: 'Essentials',
-  },
-  {
-    item: 'Toor Dal',
-    quantity: '1 kg',
-    priceInRupees: 130,
-    category: 'Pulses',
-  },
-  {
-    item: 'Moong Dal',
-    quantity: '1 kg',
-    priceInRupees: 120,
-    category: 'Pulses',
-  },
-  {
-    item: 'Chana Dal',
-    quantity: '1 kg',
-    priceInRupees: 95,
-    category: 'Pulses',
-  },
-  { item: 'Apple', quantity: '1 kg', priceInRupees: 140, category: 'Fruits' },
-  { item: 'Banana', quantity: '12', priceInRupees: 60, category: 'Fruits' },
-  { item: 'Orange', quantity: '1 kg', priceInRupees: 95, category: 'Fruits' },
-  {
-    item: 'Tea Powder',
-    quantity: '250 g',
-    priceInRupees: 110,
-    category: 'Beverages',
-  },
-  {
-    item: 'Coffee Powder',
-    quantity: '200 g',
-    priceInRupees: 160,
-    category: 'Beverages',
-  },
-];
+type StudentItem = {
+  item: string;
+  quantity: string;
+  price: number;
+};
 
 const categories = [
   'All',
@@ -97,13 +26,16 @@ const categories = [
   'Dairy',
   'Pulses',
   'Fruits',
-  'Beverages',
   'Essentials',
 ];
 
 function CataloguePage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [priceSort, setPriceSort] = useState<PriceSort>('default');
+  const [studentItems, setStudentItems] = useState<StudentItem[]>([]);
+  const [studentsError, setStudentsError] = useState<string | null>(null);
+  const [visibleItems, setVisibleItems] = useState<GroceryPrice[]>([]);
+  const [groceryError, setGroceryError] = useState<string | null>(null);
 
   const todayDate = new Date().toLocaleDateString('en-IN', {
     day: '2-digit',
@@ -111,35 +43,72 @@ function CataloguePage() {
     year: 'numeric',
   });
 
-  const visibleItems = useMemo(() => {
-    console.count('visibleItems computed');
-    const filteredItems =
-      selectedCategory === 'All'
-        ? groceryPriceList
-        : groceryPriceList.filter((item) => item.category === selectedCategory);
-
-    if (priceSort === 'default') {
-      return filteredItems;
-    }
-
-    return [...filteredItems].sort((a, b) => {
-      if (priceSort === 'low-to-high') {
-        return a.priceInRupees - b.priceInRupees;
+  useEffect(() => {
+    const loadStudentItems = async () => {
+      try {
+        setStudentsError(null);
+        const response = await fetch('http://localhost:5000/api/catalogue/students');
+        if (!response.ok) {
+          throw new Error('Failed to load student items');
+        }
+        const data = (await response.json()) as StudentItem[];
+        setStudentItems(data);
+      } catch (error) {
+        setStudentsError(error instanceof Error ? error.message : 'Something went wrong');
       }
-      return b.priceInRupees - a.priceInRupees;
-    });
-  }, [priceSort, selectedCategory]);
+    };
+
+    void loadStudentItems();
+  }, []);
+
+  useEffect(() => {
+    const loadGroceryItems = async () => {
+      try {
+        setGroceryError(null);
+        const params = new URLSearchParams();
+        if (selectedCategory !== 'All') {
+          params.set('category', selectedCategory);
+        }
+        if (priceSort !== 'default') {
+          params.set('sort', priceSort);
+        }
+
+        const query = params.toString();
+        const url = query
+          ? `http://localhost:5000/api/products?${query}`
+          : 'http://localhost:5000/api/products';
+
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error('Failed to load grocery items');
+        }
+
+        const data = (await response.json()) as GroceryPrice[];
+        setVisibleItems(data);
+      } catch (error) {
+        setGroceryError(error instanceof Error ? error.message : 'Something went wrong');
+      }
+    };
+
+    void loadGroceryItems();
+  }, [selectedCategory, priceSort]);
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-900 dark:text-slate-100">
       <header className="border-b border-slate-300 bg-white transition-colors dark:border-slate-700 dark:bg-slate-800">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="flex w-full items-center justify-between px-6 py-4">
           <StoreLogo
             className="h-12"
             imgClassName="h-12 w-auto"
             textClassName="text-xl font-bold"
           />
           <div className="flex items-center gap-2">
+            <Link
+              to="/faq"
+              className="rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-slate-200 dark:hover:bg-slate-700"
+            >
+              FAQ
+            </Link>
             <Link
               to="/"
               className="rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-slate-200 dark:hover:bg-slate-700"
@@ -152,7 +121,7 @@ function CataloguePage() {
       </header>
 
       <main className="w-full px-6 py-10">
-        <div className="mx-auto max-w-6xl">
+        <div className="w-full">
           <h2 className="text-3xl font-extrabold">Grocery Price List</h2>
           <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
             Latest updated on: {todayDate}
@@ -171,14 +140,14 @@ function CataloguePage() {
                 <tbody>
                   {visibleItems.map((grocery) => (
                     <tr
-                      key={grocery.item}
+                      key={grocery.id}
                       className="border-t border-slate-300 dark:border-slate-700"
                     >
-                      <td className="px-4 py-3">{grocery.item}</td>
+                      <td className="px-4 py-3">{grocery.name}</td>
                       <td className="px-4 py-3">{grocery.quantity}</td>
                       <td className="px-4 py-3">
                         {'\u20B9'}
-                        {grocery.priceInRupees}
+                        {grocery.price}
                       </td>
                     </tr>
                   ))}
@@ -233,7 +202,44 @@ function CataloguePage() {
               <p className="mt-4 text-sm text-slate-700 dark:text-slate-300">
                 Showing {visibleItems.length} item(s)
               </p>
+              {groceryError ? (
+                <p className="mt-2 text-sm text-rose-600 dark:text-rose-400">
+                  {groceryError}
+                </p>
+              ) : null}
             </aside>
+          </section>
+
+          <section className="mt-8 w-full lg:w-8/12">
+            <h3 className="text-2xl font-bold">Students</h3>
+            <div className="mt-4 overflow-x-auto rounded-lg border border-slate-300 dark:border-slate-700">
+              <table className="min-w-full bg-white text-left dark:bg-slate-800">
+                <thead className="bg-slate-200 text-sm uppercase tracking-wide dark:bg-slate-700">
+                  <tr>
+                    <th className="px-4 py-3">Item</th>
+                    <th className="px-4 py-3">Quantity</th>
+                    <th className="px-4 py-3">Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {studentItems.map((studentItem) => (
+                    <tr
+                      key={studentItem.item}
+                      className="border-t border-slate-300 dark:border-slate-700"
+                    >
+                      <td className="px-4 py-3">{studentItem.item}</td>
+                      <td className="px-4 py-3">{studentItem.quantity}</td>
+                      <td className="px-4 py-3">{studentItem.price}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {studentsError ? (
+              <p className="mt-2 text-sm text-rose-600 dark:text-rose-400">
+                {studentsError}
+              </p>
+            ) : null}
           </section>
         </div>
       </main>

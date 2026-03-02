@@ -3,10 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import StoreLogo from "../components/StoreLogo";
 import ThemeToggleButton from "../components/ThemeToggleButton";
-import { products } from "../data/products";
 import { logout } from "../store/auth/authSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { productAddedToCart } from "../store/inventory/inventorySlice";
+import { productAddedToCart, syncInventoryProducts } from "../store/inventory/inventorySlice";
+import type { Product } from "../types/product";
 
 const cartStorageKey = (email: string) => `sr_store_cart_count_${email}`;
 
@@ -15,8 +15,10 @@ function CustomerHomePage() {
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
   const inventoryItems = useAppSelector((state) => state.inventory.items);
+  const [products, setProducts] = useState<Product[]>([]);
   const [cartCount, setCartCount] = useState(0);
   const [cartMessage, setCartMessage] = useState<string | null>(null);
+  const [productsError, setProductsError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?.email) {
@@ -28,6 +30,26 @@ function CustomerHomePage() {
     const parsedCount = rawCount ? Number(rawCount) : 0;
     setCartCount(Number.isFinite(parsedCount) ? parsedCount : 0);
   }, [user?.email]);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setProductsError(null);
+        const response = await fetch("http://localhost:5000/api/products");
+        if (!response.ok) {
+          throw new Error("Failed to load products");
+        }
+
+        const data = (await response.json()) as Product[];
+        setProducts(data);
+        dispatch(syncInventoryProducts(data.map((product) => product.id)));
+      } catch (error) {
+        setProductsError(error instanceof Error ? error.message : "Something went wrong");
+      }
+    };
+
+    void loadProducts();
+  }, [dispatch]);
 
   const handleAddToCart = (productId: string) => {
     const inventory = inventoryItems.find((item) => item.productId === productId);
@@ -57,7 +79,7 @@ function CustomerHomePage() {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-900 dark:text-slate-100">
       <header className="border-b border-slate-300 bg-white transition-colors dark:border-slate-700 dark:bg-slate-800">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
+        <div className="flex w-full items-center justify-between px-6 py-4">
           <div>
             <StoreLogo
               className="h-12"
@@ -80,14 +102,14 @@ function CustomerHomePage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-8">
+      <main className="w-full px-6 py-8">
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Customer Home</h2>
           <Link to="/" className="text-sm text-sky-700 hover:underline dark:text-sky-400">
             Back to Home
           </Link>
         </div>
         {cartMessage && <p className="mb-4 text-sm text-slate-700 dark:text-slate-300">{cartMessage}</p>}
+        {productsError && <p className="mb-4 text-sm text-rose-600 dark:text-rose-400">{productsError}</p>}
 
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {products.map((product) => (

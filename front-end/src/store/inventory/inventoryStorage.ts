@@ -1,5 +1,3 @@
-import { products } from "../../data/products";
-
 type InventoryItem = {
   productId: string;
   stock: number;
@@ -13,41 +11,9 @@ type InventoryState = {
 
 const INVENTORY_STORAGE_KEY = "sr_store_inventory";
 
-const getDefaultInitialStock = (productId: string) => (productId === "egg" ? 120 : 200);
-
 export const createDefaultInventoryState = (): InventoryState => ({
-  items: products.map((product) => {
-    const initialStock = getDefaultInitialStock(product.id);
-    return {
-      productId: product.id,
-      stock: initialStock,
-      sold: 0,
-      initialStock,
-    };
-  }),
+  items: [],
 });
-
-const normalizeItem = (
-  productId: string,
-  existing: Partial<InventoryItem> | undefined,
-): InventoryItem => {
-  const initialStock =
-    typeof existing?.initialStock === "number" && existing.initialStock > 0
-      ? existing.initialStock
-      : getDefaultInitialStock(productId);
-
-  const stock =
-    typeof existing?.stock === "number" && existing.stock >= 0 ? existing.stock : initialStock;
-
-  const sold = typeof existing?.sold === "number" && existing.sold >= 0 ? existing.sold : 0;
-
-  return {
-    productId,
-    stock,
-    sold,
-    initialStock,
-  };
-};
 
 const isInventoryState = (value: unknown): value is InventoryState => {
   if (!value || typeof value !== "object") {
@@ -71,12 +37,7 @@ export const loadInventoryState = (): InventoryState => {
     if (!isInventoryState(parsed)) {
       return defaults;
     }
-
-    const byId = new Map(parsed.items.map((item) => [item.productId, item]));
-
-    return {
-      items: products.map((product) => normalizeItem(product.id, byId.get(product.id))),
-    };
+    return parsed;
   } catch {
     return defaults;
   }

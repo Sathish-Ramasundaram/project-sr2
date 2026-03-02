@@ -25,6 +25,9 @@ function HomePage() {
             <Link to="/catalogue" className="hover:underline">
               Catalogue
             </Link>
+            <Link to="/faq" className="hover:underline">
+              FAQ
+            </Link>
             <button
               type="button"
               onClick={() => setIsLoginChooserOpen(true)}

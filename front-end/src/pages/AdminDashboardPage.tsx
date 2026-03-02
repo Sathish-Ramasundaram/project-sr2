@@ -1,9 +1,11 @@
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import StoreLogo from "../components/StoreLogo";
 import ThemeToggleButton from "../components/ThemeToggleButton";
-import { products } from "../data/products";
 import { adminLogout } from "../store/admin/adminSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { syncInventoryProducts } from "../store/inventory/inventorySlice";
+import type { Product } from "../types/product";
 
 type InventoryViewItem = {
   productId: string;
@@ -18,6 +20,28 @@ function AdminDashboardPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const inventoryItems = useAppSelector((state) => state.inventory.items);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productsError, setProductsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setProductsError(null);
+        const response = await fetch("http://localhost:5000/api/products");
+        if (!response.ok) {
+          throw new Error("Failed to load products");
+        }
+
+        const data = (await response.json()) as Product[];
+        setProducts(data);
+        dispatch(syncInventoryProducts(data.map((product) => product.id)));
+      } catch (error) {
+        setProductsError(error instanceof Error ? error.message : "Something went wrong");
+      }
+    };
+
+    void loadProducts();
+  }, [dispatch]);
 
   const inventoryView = inventoryItems
     .map((inventory) => {
@@ -75,6 +99,9 @@ function AdminDashboardPage() {
         <div className="mb-6 rounded-lg border border-slate-300 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800">
           <h2 className="text-xl font-bold">Admin Dashboard</h2>
         </div>
+        {productsError ? (
+          <p className="mb-4 text-sm text-rose-600 dark:text-rose-400">{productsError}</p>
+        ) : null}
 
         <section className="mb-6 grid gap-4 sm:grid-cols-1">
           <article className="rounded-lg border border-slate-300 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">

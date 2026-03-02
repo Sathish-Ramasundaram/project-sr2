@@ -1,11 +1,42 @@
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import StoreLogo from "../components/StoreLogo";
 import ThemeToggleButton from "../components/ThemeToggleButton";
-import { getProductById } from "../data/products";
+import type { Product } from "../types/product";
 
 function CustomerProductDetailsPage() {
   const { productId } = useParams();
-  const product = productId ? getProductById(productId) : null;
+  const [product, setProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProduct = async () => {
+      if (!productId) {
+        setProduct(null);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://localhost:5000/api/products/${productId}`);
+        if (!response.ok) {
+          setProduct(null);
+          setIsLoading(false);
+          return;
+        }
+
+        const data = (await response.json()) as Product;
+        setProduct(data);
+      } catch {
+        setProduct(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    setIsLoading(true);
+    void loadProduct();
+  }, [productId]);
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-900 dark:text-slate-100">
@@ -21,7 +52,11 @@ function CustomerProductDetailsPage() {
       </header>
 
       <main className="px-6 py-10">
-        {!product ? (
+        {isLoading ? (
+          <div className="mx-auto max-w-3xl rounded-lg border border-slate-300 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
+            <h2 className="text-2xl font-bold">Loading product...</h2>
+          </div>
+        ) : !product ? (
           <div className="mx-auto max-w-3xl rounded-lg border border-slate-300 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
             <h2 className="text-2xl font-bold">Product not found</h2>
             <Link to="/customer/home" className="mt-3 inline-block text-sm text-sky-700 hover:underline dark:text-sky-400">
