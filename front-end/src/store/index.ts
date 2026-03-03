@@ -2,6 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import createSagaMiddleware from "redux-saga";
 import adminReducer from "./admin/adminSlice";
 import authReducer from "./auth/authSlice";
+import cartReducer from "./cart/cartSlice";
 import inventoryReducer from "./inventory/inventorySlice";
 import { saveInventoryState } from "./inventory/inventoryStorage";
 import rootSaga from "./rootSaga";
@@ -12,6 +13,7 @@ export const store = configureStore({
   reducer: {
     auth: authReducer,
     admin: adminReducer,
+    cart: cartReducer,
     inventory: inventoryReducer,
   },
   middleware: (getDefaultMiddleware) =>

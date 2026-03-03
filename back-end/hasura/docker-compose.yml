@@ -1,0 +1,35 @@
+
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: sr_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: sr_store
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  hasura:
+    image: hasura/graphql-engine:v2.44.0
+    container_name: sr_hasura
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgres@postgres:5432/sr_store
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+      HASURA_GRAPHQL_JWT_SECRET: '{"type":"HS256","key":"change-this-to-a-very-strong-secret","claims_namespace":"https://hasura.io/jwt/claims"}'
+
+
+volumes:
+  pg_data:

@@ -1,49 +1,85 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { graphqlRequest } from "../api/graphqlClient";
+import {
+  GET_ACTIVE_PRODUCTS_WITH_INVENTORY
+} from "../api/operations";
 import AppHeader from "../components/AppHeader";
 import ProductCard from "../components/ProductCard";
 import StoreLogo from "../components/StoreLogo";
 import ThemeToggleButton from "../components/ThemeToggleButton";
 import { logout } from "../store/auth/authSlice";
+import {
+  addToCartRequest,
+  clearCartFeedback,
+  loadCartCountRequest
+} from "../store/cart/cartSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { productAddedToCart, syncInventoryProducts } from "../store/inventory/inventorySlice";
+import { syncInventoryProducts } from "../store/inventory/inventorySlice";
 import type { Product } from "../types/product";
 
-const cartStorageKey = (email: string) => `sr_store_cart_count_${email}`;
+type HasuraProductsResponse = {
+  products: Array<{
+    id: string;
+    name: string;
+    image_url: string;
+    unit: string;
+    price: number;
+    inventory: Array<{ stock: number }>;
+  }>;
+};
 
 function CustomerHomePage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
   const inventoryItems = useAppSelector((state) => state.inventory.items);
+  const cartCount = useAppSelector((state) => state.cart.count);
+  const cartInfo = useAppSelector((state) => state.cart.info);
+  const cartError = useAppSelector((state) => state.cart.error);
   const [products, setProducts] = useState<Product[]>([]);
-  const [cartCount, setCartCount] = useState(0);
   const [cartMessage, setCartMessage] = useState<string | null>(null);
   const [productsError, setProductsError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user?.email) {
-      setCartCount(0);
+    if (!user?.id) {
+      return;
+    }
+    dispatch(loadCartCountRequest({ customerId: user.id }));
+  }, [dispatch, user?.id]);
+
+  useEffect(() => {
+    if (cartInfo) {
+      setCartMessage(cartInfo);
+      dispatch(clearCartFeedback());
       return;
     }
 
-    const rawCount = localStorage.getItem(cartStorageKey(user.email));
-    const parsedCount = rawCount ? Number(rawCount) : 0;
-    setCartCount(Number.isFinite(parsedCount) ? parsedCount : 0);
-  }, [user?.email]);
+    if (cartError) {
+      setCartMessage(cartError);
+      dispatch(clearCartFeedback());
+    }
+  }, [cartError, cartInfo, dispatch]);
 
   useEffect(() => {
     const loadProducts = async () => {
       try {
         setProductsError(null);
-        const response = await fetch("http://localhost:5000/api/products");
-        if (!response.ok) {
-          throw new Error("Failed to load products");
-        }
+        const data = await graphqlRequest<HasuraProductsResponse>(
+          GET_ACTIVE_PRODUCTS_WITH_INVENTORY
+        );
 
-        const data = (await response.json()) as Product[];
-        setProducts(data);
-        dispatch(syncInventoryProducts(data.map((product) => product.id)));
+        const mappedProducts: Product[] = data.products.map((product) => ({
+          id: product.id,
+          name: product.name,
+          imageUrl: product.image_url,
+          quantity: product.unit,
+          price: Number(product.price),
+          description: ""
+        }));
+
+        setProducts(mappedProducts);
+        dispatch(syncInventoryProducts(mappedProducts.map((product) => product.id)));
       } catch (error) {
         setProductsError(error instanceof Error ? error.message : "Something went wrong");
       }
@@ -59,15 +95,11 @@ function CustomerHomePage() {
       return;
     }
 
-    dispatch(productAddedToCart(productId));
-
-    if (user?.email) {
-      const nextCount = cartCount + 1;
-      setCartCount(nextCount);
-      localStorage.setItem(cartStorageKey(user.email), String(nextCount));
+    if (!user?.id) {
+      setCartMessage("Customer not found for cart update.");
+      return;
     }
-
-    setCartMessage("Item added to cart.");
+    dispatch(addToCartRequest({ customerId: user.id, productId }));
   };
 
   const handleLogout = () => {

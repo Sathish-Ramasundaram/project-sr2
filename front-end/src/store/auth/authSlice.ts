@@ -2,6 +2,7 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { getSessionUser } from "./authStorage";
 
 type AuthUser = {
+  id: string;
   name: string;
   email: string;
 };
@@ -129,4 +130,3 @@ export const {
 } = authSlice.actions;
 
 export default authSlice.reducer;
-

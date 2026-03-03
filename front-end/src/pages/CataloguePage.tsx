@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { graphqlRequest } from '../api/graphqlClient';
+import { GET_ACTIVE_PRODUCTS_WITH_INVENTORY } from '../api/operations';
 import AppHeader from '../components/AppHeader';
 import StoreLogo from '../components/StoreLogo';
 import ThemeToggleButton from '../components/ThemeToggleButton';
@@ -18,6 +20,17 @@ type StudentItem = {
   item: string;
   quantity: string;
   price: number;
+};
+
+type HasuraProductsResponse = {
+  products: Array<{
+    id: string;
+    name: string;
+    image_url: string;
+    unit: string;
+    price: number;
+    inventory: Array<{ stock: number }>;
+  }>;
 };
 
 const categories = [
@@ -66,26 +79,66 @@ function CataloguePage() {
     const loadGroceryItems = async () => {
       try {
         setGroceryError(null);
-        const params = new URLSearchParams();
+        const data = await graphqlRequest<HasuraProductsResponse>(
+          GET_ACTIVE_PRODUCTS_WITH_INVENTORY
+        );
+
+        let mappedItems: GroceryPrice[] = data.products.map((product) => ({
+          id: product.id,
+          name: product.name,
+          quantity: product.unit,
+          price: Number(product.price),
+          category: 'All'
+        }));
+
+        const categoryMap: Record<string, string> = {
+          Rice: 'Grains',
+          'Brown Rice': 'Grains',
+          Wheat: 'Grains',
+          Corn: 'Grains',
+          Tomato: 'Vegetables',
+          Potato: 'Vegetables',
+          Onion: 'Vegetables',
+          Egg: 'Dairy',
+          Milk: 'Dairy',
+          Curd: 'Dairy',
+          Paneer: 'Dairy',
+          Sugar: 'Essentials',
+          Salt: 'Essentials',
+          'Cooking Oil': 'Essentials',
+          'Toor Dal': 'Pulses',
+          Apple: 'Fruits',
+          Banana: 'Fruits'
+        };
+
+        mappedItems = mappedItems.map((item) => ({
+          ...item,
+          category: categoryMap[item.name] ?? 'Essentials'
+        }));
+
         if (selectedCategory !== 'All') {
-          params.set('category', selectedCategory);
-        }
-        if (priceSort !== 'default') {
-          params.set('sort', priceSort);
-        }
-
-        const query = params.toString();
-        const url = query
-          ? `http://localhost:5000/api/products?${query}`
-          : 'http://localhost:5000/api/products';
-
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error('Failed to load grocery items');
+          mappedItems = mappedItems.filter(
+            (item) => item.category.toLowerCase() === selectedCategory.toLowerCase()
+          );
         }
 
-        const data = (await response.json()) as GroceryPrice[];
-        setVisibleItems(data);
+        if (priceSort === 'low-to-high') {
+          mappedItems = [...mappedItems].sort((a, b) => a.price - b.price);
+        } else if (priceSort === 'high-to-low') {
+          mappedItems = [...mappedItems].sort((a, b) => b.price - a.price);
+        } else if (selectedCategory.toLowerCase() === 'grains') {
+          const grainOrder: Record<string, number> = {
+            Rice: 0,
+            'Brown Rice': 1,
+            Wheat: 2,
+            Corn: 3
+          };
+          mappedItems = [...mappedItems].sort(
+            (a, b) => (grainOrder[a.name] ?? Number.MAX_SAFE_INTEGER) - (grainOrder[b.name] ?? Number.MAX_SAFE_INTEGER)
+          );
+        }
+
+        setVisibleItems(mappedItems);
       } catch (error) {
         setGroceryError(error instanceof Error ? error.message : 'Something went wrong');
       }

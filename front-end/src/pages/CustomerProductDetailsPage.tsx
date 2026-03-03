@@ -1,9 +1,23 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { graphqlRequest } from "../api/graphqlClient";
+import { GET_PRODUCT_BY_ID } from "../api/operations";
 import AppHeader from "../components/AppHeader";
 import StoreLogo from "../components/StoreLogo";
 import ThemeToggleButton from "../components/ThemeToggleButton";
 import type { Product } from "../types/product";
+
+type HasuraProductByIdResponse = {
+  products_by_pk: {
+    id: string;
+    name: string;
+    description: string | null;
+    image_url: string | null;
+    unit: string;
+    price: number;
+    is_active: boolean;
+  } | null;
+};
 
 function CustomerProductDetailsPage() {
   const { productId } = useParams();
@@ -19,15 +33,26 @@ function CustomerProductDetailsPage() {
       }
 
       try {
-        const response = await fetch(`http://localhost:5000/api/products/${productId}`);
-        if (!response.ok) {
+        const data = await graphqlRequest<HasuraProductByIdResponse>(
+          GET_PRODUCT_BY_ID,
+          { id: productId }
+        );
+
+        if (!data.products_by_pk || !data.products_by_pk.is_active) {
           setProduct(null);
           setIsLoading(false);
           return;
         }
 
-        const data = (await response.json()) as Product;
-        setProduct(data);
+        const mappedProduct: Product = {
+          id: data.products_by_pk.id,
+          name: data.products_by_pk.name,
+          imageUrl: data.products_by_pk.image_url ?? "",
+          quantity: data.products_by_pk.unit,
+          price: Number(data.products_by_pk.price),
+          description: data.products_by_pk.description ?? ""
+        };
+        setProduct(mappedProduct);
       } catch {
         setProduct(null);
       } finally {

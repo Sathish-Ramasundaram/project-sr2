@@ -1,4 +1,4 @@
-import { delay, put, takeLatest } from "redux-saga/effects";
+import { call, delay, put, takeLatest } from "redux-saga/effects";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import {
   clearAuthFeedback,
@@ -17,11 +17,29 @@ import {
   type RegisterPayload,
 } from "./authSlice";
 import {
+  setAuthToken,
   clearCurrentCustomerEmail,
-  getStoredCustomers,
-  saveStoredCustomers,
   setCurrentCustomerEmail,
+  setSessionUser,
 } from "./authStorage";
+
+type LoginApiResponse = {
+  token: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+};
+
+type RegisterApiResponse = {
+  token: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+};
 
 function* handleLogin(action: PayloadAction<LoginPayload>) {
   const { email, password } = action.payload;
@@ -32,14 +50,38 @@ function* handleLogin(action: PayloadAction<LoginPayload>) {
     return;
   }
 
-  const customer = getStoredCustomers().find((entry) => entry.email.toLowerCase() === email.toLowerCase());
-  if (!customer || customer.password !== password) {
-    yield put(loginFailure("Invalid email or password."));
-    return;
-  }
+  try {
+    const response: Response = yield call(() =>
+      fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password
+        })
+      })
+    );
 
-  setCurrentCustomerEmail(customer.email);
-  yield put(loginSuccess({ name: customer.name, email: customer.email }));
+    const responseBody: LoginApiResponse | { message?: string } = yield call(() => response.json());
+    if (!response.ok) {
+      const message =
+        "message" in responseBody && responseBody.message
+          ? responseBody.message
+          : "Invalid email or password.";
+      yield put(loginFailure(message));
+      return;
+    }
+
+    const data = responseBody as LoginApiResponse;
+    setAuthToken(data.token);
+    setSessionUser({ id: data.user.id, name: data.user.name, email: data.user.email });
+    setCurrentCustomerEmail(data.user.email);
+    yield put(loginSuccess({ id: data.user.id, name: data.user.name, email: data.user.email }));
+  } catch {
+    yield put(loginFailure("Login failed. Please try again."));
+  }
 }
 
 function* handleRegister(action: PayloadAction<RegisterPayload>) {
@@ -56,17 +98,39 @@ function* handleRegister(action: PayloadAction<RegisterPayload>) {
     return;
   }
 
-  const customers = getStoredCustomers();
-  const alreadyExists = customers.some((entry) => entry.email.toLowerCase() === email.toLowerCase());
-  if (alreadyExists) {
-    yield put(registerFailure("An account with this email already exists."));
-    return;
-  }
+  try {
+    const response: Response = yield call(() =>
+      fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          password
+        })
+      })
+    );
 
-  const updatedCustomers = [...customers, { name, email, password }];
-  saveStoredCustomers(updatedCustomers);
-  setCurrentCustomerEmail(email);
-  yield put(registerSuccess({ name, email }));
+    const responseBody: RegisterApiResponse | { message?: string } = yield call(() => response.json());
+    if (!response.ok) {
+      const message =
+        "message" in responseBody && responseBody.message
+          ? responseBody.message
+          : "Failed to register.";
+      yield put(registerFailure(message));
+      return;
+    }
+
+    const data = responseBody as RegisterApiResponse;
+    setAuthToken(data.token);
+    setSessionUser({ id: data.user.id, name: data.user.name, email: data.user.email });
+    setCurrentCustomerEmail(data.user.email);
+    yield put(registerSuccess({ id: data.user.id, name: data.user.name, email: data.user.email }));
+  } catch {
+    yield put(registerFailure("Registration failed. Please try again."));
+  }
 }
 
 function* handleForgotPassword(action: PayloadAction<ForgotPasswordPayload>) {
@@ -83,20 +147,36 @@ function* handleForgotPassword(action: PayloadAction<ForgotPasswordPayload>) {
     return;
   }
 
-  const customers = getStoredCustomers();
-  const targetIndex = customers.findIndex((entry) => entry.email.toLowerCase() === email.toLowerCase());
-  if (targetIndex < 0) {
-    yield put(forgotPasswordFailure("No customer account found with this email."));
-    return;
-  }
+  try {
+    const response: Response = yield call(() =>
+      fetch("http://localhost:5000/api/auth/forgot", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          newPassword,
+          confirmNewPassword
+        })
+      })
+    );
 
-  const updatedCustomers = [...customers];
-  updatedCustomers[targetIndex] = {
-    ...updatedCustomers[targetIndex],
-    password: newPassword,
-  };
-  saveStoredCustomers(updatedCustomers);
-  yield put(forgotPasswordSuccess("Password reset successful. You can log in now."));
+    const responseBody: { message?: string } = yield call(() => response.json());
+    if (!response.ok) {
+      const message = responseBody.message ?? "Forgot password failed.";
+      yield put(forgotPasswordFailure(message));
+      return;
+    }
+
+    yield put(
+      forgotPasswordSuccess(
+        responseBody.message ?? "Password reset successful. You can log in now."
+      )
+    );
+  } catch {
+    yield put(forgotPasswordFailure("Forgot password failed. Please try again."));
+  }
 }
 
 function* handleLogout() {
@@ -110,4 +190,3 @@ export function* authSaga() {
   yield takeLatest(forgotPasswordRequest.type, handleForgotPassword);
   yield takeLatest(logout.type, handleLogout);
 }
-
