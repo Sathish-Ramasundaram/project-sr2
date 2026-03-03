@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import AppHeader from "../components/AppHeader";
 import ProductCard from "../components/ProductCard";
 import StoreLogo from "../components/StoreLogo";
 import ThemeToggleButton from "../components/ThemeToggleButton";
@@ -78,16 +79,17 @@ function CustomerHomePage() {
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-900 dark:text-slate-100">
-      <header className="border-b border-slate-300 bg-white transition-colors dark:border-slate-700 dark:bg-slate-800">
-        <div className="flex w-full items-center justify-between px-6 py-4">
+      <AppHeader
+        left={(
           <div>
             <StoreLogo
-              className="h-12"
+              className="h-12 mt-1"
               imgClassName="h-12 w-auto"
               textClassName="text-xl font-bold"
             />
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Welcome, {user?.name ?? "Customer"}</p>
           </div>
+        )}
+        right={(
           <div className="flex items-center gap-3">
             <span className="rounded-md bg-slate-200 px-2 py-1 text-xs font-medium dark:bg-slate-700">Cart: {cartCount}</span>
             <ThemeToggleButton />
@@ -99,14 +101,14 @@ function CustomerHomePage() {
               Logout
             </button>
           </div>
-        </div>
-      </header>
+        )}
+      />
 
       <main className="w-full px-6 py-8">
         <div className="mb-5 flex items-center justify-between">
-          <Link to="/" className="text-sm text-sky-700 hover:underline dark:text-sky-400">
-            Back to Home
-          </Link>
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            Welcome, {user?.name ?? "Customer"}
+          </p>
         </div>
         {cartMessage && <p className="mb-4 text-sm text-slate-700 dark:text-slate-300">{cartMessage}</p>}
         {productsError && <p className="mb-4 text-sm text-rose-600 dark:text-rose-400">{productsError}</p>}
@@ -127,3 +129,4 @@ function CustomerHomePage() {
 }
 
 export default CustomerHomePage;
+

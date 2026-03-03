@@ -1,10 +1,20 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import AppHeader from '../components/AppHeader';
 import ThemeToggleButton from '../components/ThemeToggleButton';
 import StoreLogo from '../components/StoreLogo';
 
 function HomePage() {
   const [isLoginChooserOpen, setIsLoginChooserOpen] = useState(false);
+  const [activeInfoSection, setActiveInfoSection] = useState<
+    'about' | 'contact' | null
+  >(null);
+  const heroSlides = [
+    'https://raw.githubusercontent.com/Sathish-Ramasundaram/images-srs/refs/heads/main/images/100PercentageCustomerSatisfaction.png',
+    'https://raw.githubusercontent.com/Sathish-Ramasundaram/images-srs/refs/heads/main/images/OriginalProductsGuarenteed.png',
+    'https://raw.githubusercontent.com/Sathish-Ramasundaram/images-srs/refs/heads/main/images/PremiumQuality.png',
+    'https://raw.githubusercontent.com/Sathish-Ramasundaram/images-srs/refs/heads/main/images/ValueForMoney.png',
+  ];
 
   const closeLoginChooser = () => {
     setIsLoginChooserOpen(false);
@@ -12,15 +22,17 @@ function HomePage() {
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-900 dark:text-slate-100">
-      <header className="border-b border-slate-300 bg-white transition-colors dark:border-slate-700 dark:bg-slate-800">
-        <div className="flex items-center justify-between px-6 py-4">
+      <AppHeader
+        left={
           <Link to="/" className="inline-flex items-center">
             <StoreLogo
-              className="h-12"
+              className="h-12 mt-1"
               imgClassName="h-12 w-auto"
               textClassName="text-xl font-bold"
             />
           </Link>
+        }
+        right={
           <nav className="flex items-center gap-6 text-sm font-medium">
             <Link to="/catalogue" className="hover:underline">
               Catalogue
@@ -37,21 +49,109 @@ function HomePage() {
             </button>
             <ThemeToggleButton />
           </nav>
-        </div>
-      </header>
+        }
+      />
 
-      <main className="flex min-h-[calc(100vh-73px)] items-center justify-center px-6">
-        <section className="text-center">
-          <StoreLogo
-            className="justify-center"
-            imgClassName="mx-auto h-24 w-auto"
-            textClassName="text-5xl font-extrabold tracking-tight"
-          />
-          <p className="mt-4 text-lg text-slate-700 dark:text-slate-300">
-            20 years of trust.
-          </p>
+      <main className="flex min-h-[calc(100vh-73px)] items-start justify-center px-0.5 sm:px-1 md:px-2 pt-12">
+        <section className="w-full text-center">
+          <div className="mt-4 flex flex-col items-center">
+            <StoreLogo
+              className="justify-center"
+              imgClassName="mx-auto h-32 w-auto"
+              textClassName="text-6xl font-extrabold tracking-tight"
+            />
+            <p className="-mt-8 text-lg leading-tight text-slate-700 dark:text-slate-300">
+              20 years of trust.
+            </p>
+          </div>
+
+          <div className="relative mt-12 overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <div className="flex w-max animate-[home-marquee_60s_linear_infinite]">
+              {[...heroSlides, ...heroSlides].map((slide, index) => (
+                <div
+                  key={`${slide}-${index}`}
+                  className="relative h-72 w-[50vw] shrink-0 overflow-hidden bg-slate-100 dark:bg-slate-900 sm:h-80 md:h-96"
+                >
+                  <img
+                    src={slide}
+                    alt={`Store slide ${index + 1}`}
+                    className="h-full w-full object-fill"
+                  />
+                  <div className="pointer-events-none absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-white/40 to-transparent dark:from-slate-900/40" />
+                  <div className="pointer-events-none absolute inset-y-0 right-0 w-4 bg-gradient-to-l from-white/40 to-transparent dark:from-slate-900/40" />
+                </div>
+              ))}
+            </div>
+            <div className="pointer-events-none absolute inset-0 bg-sky-500/15 mix-blend-multiply dark:bg-emerald-500/20" />
+          </div>
         </section>
       </main>
+      <section className="px-0.5 pb-8 sm:px-1 md:px-2">
+        <div className="p-3">
+          <div className="flex items-center justify-center gap-6 text-sm font-semibold">
+            <button
+              type="button"
+              onClick={() => setActiveInfoSection('about')}
+              className={`rounded-md px-3 py-1 transition-colors ${
+                activeInfoSection === 'about'
+                  ? 'bg-sky-700 text-white dark:bg-sky-500 dark:text-slate-900'
+                  : 'text-sky-700 hover:underline dark:text-sky-400'
+              }`}
+            >
+              About Us
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveInfoSection('contact')}
+              className={`rounded-md px-3 py-1 transition-colors ${
+                activeInfoSection === 'contact'
+                  ? 'bg-sky-700 text-white dark:bg-sky-500 dark:text-slate-900'
+                  : 'text-sky-700 hover:underline dark:text-sky-400'
+              }`}
+            >
+              Contact Us
+            </button>
+          </div>
+
+          {activeInfoSection === 'about' ? (
+            <div
+              className="mx-auto mt-4 max-w-4xl text-left text-sm"
+              id="about-content"
+            >
+              <p className="font-semibold">About SR Stores</p>
+              <p className="mt-2">
+                SR Stores has served neighborhood families for over 20 years
+                with quality groceries, fair pricing, and trusted daily
+                essentials.
+              </p>
+              <p className="mt-2">
+                Branches: Chennai, Coimbatore, Madurai, Tirunelveli | Open: 6:00
+                AM - 10:00 PM.
+              </p>
+            </div>
+          ) : null}
+
+          {activeInfoSection === 'contact' ? (
+            <div
+              className="mx-auto mt-4 max-w-4xl text-left text-sm"
+              id="contact-content"
+            >
+              <p className="font-semibold">Contact SR Stores</p>
+              <p className="mt-2">Phone: +91 98765 43210</p>
+              <p className="mt-1">Email: support@srstores.demo</p>
+            </div>
+          ) : null}
+        </div>
+      </section>
+      <footer className="border-t border-slate-300 bg-white px-6 py-4 text-center text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+        2026 All right reserved
+      </footer>
+      <style>{`
+        @keyframes home-marquee {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+      `}</style>
 
       {isLoginChooserOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/55 px-6">

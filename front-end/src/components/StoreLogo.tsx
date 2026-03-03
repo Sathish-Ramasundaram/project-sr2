@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
 type StoreLogoProps = {
   lightSrc?: string;
@@ -10,18 +10,20 @@ type StoreLogoProps = {
 };
 
 function StoreLogo({
-  lightSrc = "/logo-light.png",
-  darkSrc = "/logo-dark.png",
-  alt = "SR Store",
-  className = "",
-  imgClassName = "",
-  textClassName = "",
+  lightSrc = '/logo-light.png',
+  darkSrc = '/logo-dark.png',
+  alt = 'SR Store',
+  className = '',
+  imgClassName = '',
+  textClassName = '',
 }: StoreLogoProps) {
   const [lightError, setLightError] = useState(false);
   const [darkError, setDarkError] = useState(false);
+  const isHeaderLogo = className.includes('h-12');
+  const adjustedClassName = `${className} ${isHeaderLogo ? 'mt-4' : ''}`.trim();
 
   return (
-    <span className={`inline-flex items-center ${className}`.trim()}>
+    <span className={`inline-flex items-center ${adjustedClassName}`.trim()}>
       {!lightError ? (
         <img
           src={lightSrc}
@@ -42,14 +44,14 @@ function StoreLogo({
 
       <span
         className={`${
-          lightError ? "dark:hidden inline-flex" : "dark:hidden hidden"
+          lightError ? 'dark:hidden inline-flex' : 'dark:hidden hidden'
         } ${textClassName}`.trim()}
       >
         SR Store
       </span>
       <span
         className={`${
-          darkError ? "dark:inline-flex hidden" : "dark:hidden hidden"
+          darkError ? 'dark:inline-flex hidden' : 'dark:hidden hidden'
         } ${textClassName}`.trim()}
       >
         SR Store

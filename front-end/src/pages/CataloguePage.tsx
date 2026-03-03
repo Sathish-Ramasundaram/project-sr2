@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import AppHeader from '../components/AppHeader';
 import StoreLogo from '../components/StoreLogo';
 import ThemeToggleButton from '../components/ThemeToggleButton';
 
@@ -95,13 +96,15 @@ function CataloguePage() {
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-900 dark:text-slate-100">
-      <header className="border-b border-slate-300 bg-white transition-colors dark:border-slate-700 dark:bg-slate-800">
-        <div className="flex w-full items-center justify-between px-6 py-4">
+      <AppHeader
+        left={(
           <StoreLogo
-            className="h-12"
+            className="h-12 mt-1"
             imgClassName="h-12 w-auto"
             textClassName="text-xl font-bold"
           />
+        )}
+        right={(
           <div className="flex items-center gap-2">
             <Link
               to="/faq"
@@ -117,8 +120,8 @@ function CataloguePage() {
             </Link>
             <ThemeToggleButton />
           </div>
-        </div>
-      </header>
+        )}
+      />
 
       <main className="w-full px-6 py-10">
         <div className="w-full">
@@ -248,3 +251,4 @@ function CataloguePage() {
 }
 
 export default CataloguePage;
+

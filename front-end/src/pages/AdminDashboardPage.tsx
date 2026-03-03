@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import AppHeader from "../components/AppHeader";
 import StoreLogo from "../components/StoreLogo";
 import ThemeToggleButton from "../components/ThemeToggleButton";
 import { adminLogout } from "../store/admin/adminSlice";
@@ -75,13 +76,15 @@ function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-900 dark:text-slate-100">
-      <header className="border-b border-slate-300 bg-white transition-colors dark:border-slate-700 dark:bg-slate-800">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+      <AppHeader
+        left={(
           <StoreLogo
-            className="h-12"
+            className="h-12 mt-1"
             imgClassName="h-12 w-auto"
             textClassName="text-xl font-bold"
           />
+        )}
+        right={(
           <div className="flex items-center gap-2">
             <ThemeToggleButton />
             <button
@@ -92,8 +95,8 @@ function AdminDashboardPage() {
               Logout
             </button>
           </div>
-        </div>
-      </header>
+        )}
+      />
 
       <main className="mx-auto max-w-6xl px-6 py-8">
         <div className="mb-6 rounded-lg border border-slate-300 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800">
@@ -161,3 +164,7 @@ function AdminDashboardPage() {
 }
 
 export default AdminDashboardPage;
+
+
+
+

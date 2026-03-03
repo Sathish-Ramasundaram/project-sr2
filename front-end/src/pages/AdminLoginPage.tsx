@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
+import AppHeader from "../components/AppHeader";
 import StoreLogo from "../components/StoreLogo";
 import ThemeToggleButton from "../components/ThemeToggleButton";
 import { adminLoginRequest, clearAdminFeedback } from "../store/admin/adminSlice";
@@ -26,16 +27,16 @@ function AdminLoginPage() {
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-900 dark:text-slate-100">
-      <header className="border-b border-slate-300 bg-white transition-colors dark:border-slate-700 dark:bg-slate-800">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+      <AppHeader
+        left={(
           <StoreLogo
-            className="h-12"
+            className="h-12 mt-1"
             imgClassName="h-12 w-auto"
             textClassName="text-xl font-bold"
           />
-          <ThemeToggleButton />
-        </div>
-      </header>
+        )}
+        right={<ThemeToggleButton />}
+      />
 
       <main className="px-6 py-10">
         <div className="mx-auto max-w-md rounded-lg border border-slate-300 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
@@ -90,3 +91,7 @@ function AdminLoginPage() {
 }
 
 export default AdminLoginPage;
+
+
+
+
