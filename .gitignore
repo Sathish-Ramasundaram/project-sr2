@@ -103,3 +103,4 @@ cypress/screenshots/
 
 *.bak
 *.swp
+*storybook.log
