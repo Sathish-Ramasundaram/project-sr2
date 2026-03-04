@@ -19,11 +19,9 @@ function StoreLogo({
 }: StoreLogoProps) {
   const [lightError, setLightError] = useState(false);
   const [darkError, setDarkError] = useState(false);
-  const isHeaderLogo = className.includes('h-12');
-  const adjustedClassName = `${className} ${isHeaderLogo ? 'mt-4' : ''}`.trim();
 
   return (
-    <span className={`inline-flex items-center ${adjustedClassName}`.trim()}>
+    <span className={`inline-flex items-center ${className}`.trim()}>
       {!lightError ? (
         <img
           src={lightSrc}

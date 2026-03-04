@@ -1,28 +1,55 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import AppHeader from "../components/AppHeader";
 import StoreLogo from "../components/StoreLogo";
 import ThemeToggleButton from "../components/ThemeToggleButton";
-import { clearAuthFeedback, loginRequest } from "../store/auth/authSlice";
+import { clearAuthFeedback, loginRequest, logout } from "../store/auth/authSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { isCustomerActiveInAnotherTab } from "../store/auth/authStorage";
 
 function CustomerLoginPage() {
   const dispatch = useAppDispatch();
+  const [searchParams] = useSearchParams();
+  const isSwitchAccount = searchParams.get("switch") === "1";
   const { isAuthenticated, status, error, info } = useAppSelector((state) => state.auth);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [hasProcessedSwitchFlow, setHasProcessedSwitchFlow] = useState(!isSwitchAccount);
 
   useEffect(() => {
     dispatch(clearAuthFeedback());
   }, [dispatch]);
 
-  if (isAuthenticated) {
+  useEffect(() => {
+    if (!isSwitchAccount || hasProcessedSwitchFlow) {
+      return;
+    }
+
+    if (isAuthenticated) {
+      dispatch(logout());
+    }
+
+    setHasProcessedSwitchFlow(true);
+  }, [dispatch, hasProcessedSwitchFlow, isAuthenticated, isSwitchAccount]);
+
+  if (isAuthenticated && hasProcessedSwitchFlow) {
     return <Navigate to="/customer/home" replace />;
   }
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    dispatch(loginRequest({ email, password }));
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (isCustomerActiveInAnotherTab(normalizedEmail)) {
+      const shouldContinue = window.confirm(
+        "This account may already be active in another tab in this browser. Do you want to continue login here?"
+      );
+      if (!shouldContinue) {
+        return;
+      }
+    }
+
+    dispatch(loginRequest({ email: normalizedEmail, password }));
   };
 
   return (
@@ -30,7 +57,7 @@ function CustomerLoginPage() {
       <AppHeader
         left={(
           <StoreLogo
-            className="h-12 mt-1"
+            className="h-12"
             imgClassName="h-12 w-auto"
             textClassName="text-xl font-bold"
           />

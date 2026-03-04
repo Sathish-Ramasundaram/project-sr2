@@ -11,6 +11,7 @@ const CustomerLoginPage = lazy(() => import("../pages/CustomerLoginPage"));
 const CustomerForgotPasswordPage = lazy(() => import("../pages/CustomerForgotPasswordPage"));
 const CustomerRegisterPage = lazy(() => import("../pages/CustomerRegisterPage"));
 const CustomerHomePage = lazy(() => import("../pages/CustomerHomePage"));
+const CustomerCartPage = lazy(() => import("../pages/CustomerCartPage"));
 const CustomerProductDetailsPage = lazy(() => import("../pages/CustomerProductDetailsPage"));
 const AdminLoginPage = lazy(() => import("../pages/AdminLoginPage"));
 const AdminDashboardPage = lazy(() => import("../pages/AdminDashboardPage"));
@@ -20,8 +21,8 @@ export function AppRouter() {
     <BrowserRouter>
       <Suspense
         fallback={
-          <div className="flex items-center justify-center h-screen">
-            ⏳ Loading page...
+          <div className="flex items-center justify-center h-screen text-2xl font-semibold">
+            Loading page...
           </div>
         }
       >
@@ -39,6 +40,7 @@ export function AppRouter() {
           <Route path="/customer/register" element={<CustomerRegisterPage />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/customer/home" element={<CustomerHomePage />} />
+            <Route path="/customer/cart" element={<CustomerCartPage />} />
             <Route
               path="/customer/product/:productId"
               element={<CustomerProductDetailsPage />}

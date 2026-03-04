@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { graphqlRequest } from '../api/graphqlClient';
-import { GET_ACTIVE_PRODUCTS_WITH_INVENTORY } from '../api/operations';
 import AppHeader from '../components/AppHeader';
 import StoreLogo from '../components/StoreLogo';
 import ThemeToggleButton from '../components/ThemeToggleButton';
+import { formatBackendError } from '../utils/apiError';
+import { CATALOGUE_SYNC_KEY } from '../utils/catalogueSync';
 
 type GroceryPrice = {
   id: string;
@@ -22,15 +22,12 @@ type StudentItem = {
   price: number;
 };
 
-type HasuraProductsResponse = {
-  products: Array<{
-    id: string;
-    name: string;
-    image_url: string;
-    unit: string;
-    price: number;
-    inventory: Array<{ stock: number }>;
-  }>;
+type CatalogueProductResponseItem = {
+  id: string;
+  name: string;
+  quantity: string;
+  price: number;
+  category: string;
 };
 
 const categories = [
@@ -48,8 +45,11 @@ function CataloguePage() {
   const [priceSort, setPriceSort] = useState<PriceSort>('default');
   const [studentItems, setStudentItems] = useState<StudentItem[]>([]);
   const [studentsError, setStudentsError] = useState<string | null>(null);
+  const [isStudentsLoading, setIsStudentsLoading] = useState(true);
   const [visibleItems, setVisibleItems] = useState<GroceryPrice[]>([]);
   const [groceryError, setGroceryError] = useState<string | null>(null);
+  const [isGroceryLoading, setIsGroceryLoading] = useState(true);
+  const [reloadSignal, setReloadSignal] = useState(0);
 
   const todayDate = new Date().toLocaleDateString('en-IN', {
     day: '2-digit',
@@ -61,6 +61,7 @@ function CataloguePage() {
     const loadStudentItems = async () => {
       try {
         setStudentsError(null);
+        setIsStudentsLoading(true);
         const response = await fetch('http://localhost:5000/api/catalogue/students');
         if (!response.ok) {
           throw new Error('Failed to load student items');
@@ -68,7 +69,9 @@ function CataloguePage() {
         const data = (await response.json()) as StudentItem[];
         setStudentItems(data);
       } catch (error) {
-        setStudentsError(error instanceof Error ? error.message : 'Something went wrong');
+        setStudentsError(formatBackendError(error, 'student items'));
+      } finally {
+        setIsStudentsLoading(false);
       }
     };
 
@@ -76,83 +79,58 @@ function CataloguePage() {
   }, []);
 
   useEffect(() => {
+    const onStorageChange = (event: StorageEvent) => {
+      if (event.key === CATALOGUE_SYNC_KEY) {
+        setReloadSignal((current) => current + 1);
+      }
+    };
+
+    window.addEventListener('storage', onStorageChange);
+    return () => {
+      window.removeEventListener('storage', onStorageChange);
+    };
+  }, []);
+
+  useEffect(() => {
     const loadGroceryItems = async () => {
       try {
         setGroceryError(null);
-        const data = await graphqlRequest<HasuraProductsResponse>(
-          GET_ACTIVE_PRODUCTS_WITH_INVENTORY
-        );
-
-        let mappedItems: GroceryPrice[] = data.products.map((product) => ({
+        setIsGroceryLoading(true);
+        const query = new URLSearchParams({
+          category: selectedCategory,
+          sort: priceSort
+        });
+        const response = await fetch(`http://localhost:5000/api/catalogue/products?${query.toString()}`);
+        if (!response.ok) {
+          throw new Error('Failed to load products');
+        }
+        const data = (await response.json()) as CatalogueProductResponseItem[];
+        const mappedItems: GroceryPrice[] = data.map((product) => ({
           id: product.id,
           name: product.name,
-          quantity: product.unit,
+          quantity: product.quantity,
           price: Number(product.price),
-          category: 'All'
+          category: product.category
         }));
-
-        const categoryMap: Record<string, string> = {
-          Rice: 'Grains',
-          'Brown Rice': 'Grains',
-          Wheat: 'Grains',
-          Corn: 'Grains',
-          Tomato: 'Vegetables',
-          Potato: 'Vegetables',
-          Onion: 'Vegetables',
-          Egg: 'Dairy',
-          Milk: 'Dairy',
-          Curd: 'Dairy',
-          Paneer: 'Dairy',
-          Sugar: 'Essentials',
-          Salt: 'Essentials',
-          'Cooking Oil': 'Essentials',
-          'Toor Dal': 'Pulses',
-          Apple: 'Fruits',
-          Banana: 'Fruits'
-        };
-
-        mappedItems = mappedItems.map((item) => ({
-          ...item,
-          category: categoryMap[item.name] ?? 'Essentials'
-        }));
-
-        if (selectedCategory !== 'All') {
-          mappedItems = mappedItems.filter(
-            (item) => item.category.toLowerCase() === selectedCategory.toLowerCase()
-          );
-        }
-
-        if (priceSort === 'low-to-high') {
-          mappedItems = [...mappedItems].sort((a, b) => a.price - b.price);
-        } else if (priceSort === 'high-to-low') {
-          mappedItems = [...mappedItems].sort((a, b) => b.price - a.price);
-        } else if (selectedCategory.toLowerCase() === 'grains') {
-          const grainOrder: Record<string, number> = {
-            Rice: 0,
-            'Brown Rice': 1,
-            Wheat: 2,
-            Corn: 3
-          };
-          mappedItems = [...mappedItems].sort(
-            (a, b) => (grainOrder[a.name] ?? Number.MAX_SAFE_INTEGER) - (grainOrder[b.name] ?? Number.MAX_SAFE_INTEGER)
-          );
-        }
 
         setVisibleItems(mappedItems);
       } catch (error) {
-        setGroceryError(error instanceof Error ? error.message : 'Something went wrong');
+        setVisibleItems([]);
+        setGroceryError(formatBackendError(error, 'catalogue items'));
+      } finally {
+        setIsGroceryLoading(false);
       }
     };
 
     void loadGroceryItems();
-  }, [selectedCategory, priceSort]);
+  }, [selectedCategory, priceSort, reloadSignal]);
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-900 dark:text-slate-100">
       <AppHeader
         left={(
           <StoreLogo
-            className="h-12 mt-1"
+            className="h-12"
             imgClassName="h-12 w-auto"
             textClassName="text-xl font-bold"
           />
@@ -194,19 +172,39 @@ function CataloguePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {visibleItems.map((grocery) => (
-                    <tr
-                      key={grocery.id}
-                      className="border-t border-slate-300 dark:border-slate-700"
-                    >
-                      <td className="px-4 py-3">{grocery.name}</td>
-                      <td className="px-4 py-3">{grocery.quantity}</td>
-                      <td className="px-4 py-3">
-                        {'\u20B9'}
-                        {grocery.price}
+                  {isGroceryLoading ? (
+                    <tr className="border-t border-slate-300 dark:border-slate-700">
+                      <td colSpan={3} className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
+                        Loading catalogue items...
                       </td>
                     </tr>
-                  ))}
+                  ) : groceryError ? (
+                    <tr className="border-t border-slate-300 dark:border-slate-700">
+                      <td colSpan={3} className="px-4 py-3 text-sm text-rose-600 dark:text-rose-400">
+                        {groceryError}
+                      </td>
+                    </tr>
+                  ) : visibleItems.length === 0 ? (
+                    <tr className="border-t border-slate-300 dark:border-slate-700">
+                      <td colSpan={3} className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
+                        No items found for selected filter.
+                      </td>
+                    </tr>
+                  ) : (
+                    visibleItems.map((grocery) => (
+                      <tr
+                        key={grocery.id}
+                        className="border-t border-slate-300 dark:border-slate-700"
+                      >
+                        <td className="px-4 py-3">{grocery.name}</td>
+                        <td className="px-4 py-3">{grocery.quantity}</td>
+                        <td className="px-4 py-3">
+                          {'\u20B9'}
+                          {grocery.price}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -256,13 +254,8 @@ function CataloguePage() {
               </div>
 
               <p className="mt-4 text-sm text-slate-700 dark:text-slate-300">
-                Showing {visibleItems.length} item(s)
+                Showing {isGroceryLoading || groceryError ? 0 : visibleItems.length} item(s)
               </p>
-              {groceryError ? (
-                <p className="mt-2 text-sm text-rose-600 dark:text-rose-400">
-                  {groceryError}
-                </p>
-              ) : null}
             </aside>
           </section>
 
@@ -278,24 +271,39 @@ function CataloguePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {studentItems.map((studentItem) => (
-                    <tr
-                      key={studentItem.item}
-                      className="border-t border-slate-300 dark:border-slate-700"
-                    >
-                      <td className="px-4 py-3">{studentItem.item}</td>
-                      <td className="px-4 py-3">{studentItem.quantity}</td>
-                      <td className="px-4 py-3">{studentItem.price}</td>
+                  {isStudentsLoading ? (
+                    <tr className="border-t border-slate-300 dark:border-slate-700">
+                      <td colSpan={3} className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
+                        Loading student items...
+                      </td>
                     </tr>
-                  ))}
+                  ) : studentsError ? (
+                    <tr className="border-t border-slate-300 dark:border-slate-700">
+                      <td colSpan={3} className="px-4 py-3 text-sm text-rose-600 dark:text-rose-400">
+                        {studentsError}
+                      </td>
+                    </tr>
+                  ) : studentItems.length === 0 ? (
+                    <tr className="border-t border-slate-300 dark:border-slate-700">
+                      <td colSpan={3} className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
+                        No student items found.
+                      </td>
+                    </tr>
+                  ) : (
+                    studentItems.map((studentItem) => (
+                      <tr
+                        key={studentItem.item}
+                        className="border-t border-slate-300 dark:border-slate-700"
+                      >
+                        <td className="px-4 py-3">{studentItem.item}</td>
+                        <td className="px-4 py-3">{studentItem.quantity}</td>
+                        <td className="px-4 py-3">{studentItem.price}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
-            {studentsError ? (
-              <p className="mt-2 text-sm text-rose-600 dark:text-rose-400">
-                {studentsError}
-              </p>
-            ) : null}
           </section>
         </div>
       </main>

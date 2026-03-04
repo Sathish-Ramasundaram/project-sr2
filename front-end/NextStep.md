@@ -1,79 +1,23 @@
-Set up PostgreSQL + Hasura
-Run Postgres and Hasura (Docker easiest).
-Verify Hasura console opens.
-Connect Hasura to Postgres.
+Core pending items for a strong demo:
 
-Create DB schema first
-Tables:
-customers
-products
-inventory
-cart_items
-orders
-order_items
-payments
-Add FK + unique constraints before app code.
+Complete checkout backend flow:
+create order
+create order_items
+payment success update
+clear cart
 
-Track tables in Hasura
-Track all tables/relationships in Hasura metadata.
-Confirm GraphQL schema is generated.
+Move stock/sales updates to payment-success (not add-to-cart).
 
-Add roles + permissions
-Roles: customer, admin.
-Row-level rules:
-customer can only access own cart/orders/profile.
-admin can access inventory/orders analytics.
+Admin sales from real order/payment data (date filters already ready in UI).
 
-Verify permissions end-to-end
-Use API Explorer with headers:
-customer role + customer UUID
-admin role
-Confirm customer cannot access others’ rows.
+Admin stock management actions (add stock / adjust stock), persisted in DB.
+If you complete these, this is a solid, demo-worthy full-stack project.
 
-Define GraphQL operations
-Create queries/mutations for:
-products + inventory
-cart CRUD
-create order + order_items
-payments read
-admin stock update/dashboard reads
+Optional polish (nice-to-have):
 
-Add frontend GraphQL client
-Create front-end/src/api/graphqlClient.ts
-Endpoint from env: HASURA_GRAPHQL_URL
-Pass auth headers (x-hasura-role, x-hasura-user-id for now in dev).
-
-Integrate Redux-Saga with Hasura
-Keep existing saga structure.
-Add new sagas:
-productsSaga
-cartSaga
-ordersSaga
-inventorySaga
-Wire in rootSaga.
-
-Migrate screens incrementally
-First: catalogue/customer-home reads from Hasura.
-Then: cart persistence.
-Then: checkout/order/payment flow.
-Then: admin dashboard + stock updates.
-
-Remove localStorage logic
-
-Real-time
-Add subscriptions for:
-stock updates
-order updates
-dashboard live changes.
-
-Tests
-Unit test sagas and utilities.
-Keep Cypress for E2E flows.
-Add API error case tests.
-
-Error handling
-Standardize GraphQL error mapping in saga layer.
-Add Sentry later for production monitoring.
+Order history page for customer.
+Basic payment webhook simulation (success/failure).
+A few e2e tests for checkout + admin stock flow.
 
 
 Good catch.

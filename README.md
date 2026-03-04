@@ -28,7 +28,7 @@ PORT=5000
 JWT_SECRET=change-this-to-a-very-strong-secret
 JWT_EXPIRES_IN=7d
 HASURA_GRAPHQL_URL=http://localhost:8080/v1/graphql
-HASURA_ADMIN_SECRET=myadminsecretkey
+HASURA_ADMIN_SECRET=admin123
 HASURA_JWT_DEFAULT_ROLE=customer
 HASURA_JWT_ALLOWED_ROLES=customer,admin
 ```
@@ -38,7 +38,7 @@ HASURA_JWT_ALLOWED_ROLES=customer,admin
 `hasura.environment` must include both admin secret and JWT secret:
 
 ```yml
-HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+HASURA_GRAPHQL_ADMIN_SECRET: admin123
 HASURA_GRAPHQL_JWT_SECRET: '{"type":"HS256","key":"change-this-to-a-very-strong-secret","claims_namespace":"https://hasura.io/jwt/claims"}'
 ```
 

@@ -4,9 +4,9 @@ import { graphqlRequest } from "../../api/graphqlClient";
 import {
   GET_CART_COUNT_BY_CUSTOMER,
   GET_CART_ITEM_QUANTITY,
-  UPSERT_CART_ITEM
+  INSERT_CART_ITEM,
+  UPDATE_CART_ITEM_QUANTITY
 } from "../../api/operations";
-import { productAddedToCart } from "../inventory/inventorySlice";
 import {
   addToCartFailure,
   addToCartRequest,
@@ -17,6 +17,7 @@ import {
   type AddToCartPayload,
   type LoadCartCountPayload
 } from "./cartSlice";
+import { formatBackendError } from "../../utils/apiError";
 
 type CartCountResponse = {
   cart_items_aggregate: {
@@ -59,7 +60,7 @@ function* handleLoadCartCount(action: PayloadAction<LoadCartCountPayload>) {
   } catch (error) {
     yield put(
       loadCartCountFailure(
-        error instanceof Error ? error.message : "Failed to load cart count."
+        formatBackendError(error, "cart count")
       )
     );
   }
@@ -83,24 +84,34 @@ function* handleAddToCart(action: PayloadAction<AddToCartPayload>) {
       }
     );
     const currentQuantity = cartItemData.cart_items[0]?.quantity ?? 0;
-
-    yield call(
-      graphqlRequest,
-      UPSERT_CART_ITEM,
-      {
-        customerId,
-        productId,
-        quantity: currentQuantity + 1
-      }
-    );
+    if (currentQuantity === 0) {
+      yield call(
+        graphqlRequest,
+        INSERT_CART_ITEM,
+        {
+          customerId,
+          productId,
+          quantity: 1
+        }
+      );
+    } else {
+      yield call(
+        graphqlRequest,
+        UPDATE_CART_ITEM_QUANTITY,
+        {
+          customerId,
+          productId,
+          quantity: currentQuantity + 1
+        }
+      );
+    }
 
     const updatedCount: number = yield call(resolveCartCount, customerId);
-    yield put(productAddedToCart(productId));
     yield put(addToCartSuccess(updatedCount));
   } catch (error) {
     yield put(
       addToCartFailure(
-        error instanceof Error ? error.message : "Failed to add item to cart."
+        formatBackendError(error, "cart update")
       )
     );
   }

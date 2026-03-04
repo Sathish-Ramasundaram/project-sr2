@@ -5,7 +5,7 @@ type InventoryItem = {
   productId: string;
   stock: number;
   sold: number;
-  initialStock: number;
+  salesHistory: number[];
 };
 
 type InventoryState = {
@@ -13,39 +13,59 @@ type InventoryState = {
 };
 
 const initialState: InventoryState = loadInventoryState();
-const getDefaultInitialStock = (productId: string) => (productId === "egg" ? 120 : 200);
+const getDefaultStock = (productId: string) => (productId === "egg" ? 120 : 200);
 
 const inventorySlice = createSlice({
   name: "inventory",
   initialState,
   reducers: {
+    hydrateInventoryItems: (state, action: PayloadAction<InventoryItem[]>) => {
+      state.items = action.payload.map((item) => ({
+        productId: item.productId,
+        stock: item.stock,
+        sold: item.sold,
+        salesHistory: Array.isArray(item.salesHistory) ? item.salesHistory : [],
+      }));
+    },
     syncInventoryProducts: (state, action: PayloadAction<string[]>) => {
       action.payload.forEach((productId) => {
         const existingItem = state.items.find((entry) => entry.productId === productId);
         if (existingItem) {
+          if (!Array.isArray(existingItem.salesHistory)) {
+            existingItem.salesHistory = [];
+          }
           return;
         }
 
-        const initialStock = getDefaultInitialStock(productId);
+        const defaultStock = getDefaultStock(productId);
         state.items.push({
           productId,
-          stock: initialStock,
+          stock: defaultStock,
           sold: 0,
-          initialStock,
+          salesHistory: [],
         });
       });
     },
-    productAddedToCart: (state, action: PayloadAction<string>) => {
-      const item = state.items.find((entry) => entry.productId === action.payload);
-      if (!item || item.stock <= 0) {
-        return;
-      }
+    orderPaid: (
+      state,
+      action: PayloadAction<Array<{ productId: string; quantity: number }>>
+    ) => {
+      const paidAt = Date.now();
+      action.payload.forEach(({ productId, quantity }) => {
+        const item = state.items.find((entry) => entry.productId === productId);
+        if (!item || quantity <= 0) {
+          return;
+        }
 
-      item.stock -= 1;
-      item.sold += 1;
+        item.stock = Math.max(0, item.stock - quantity);
+        item.sold += quantity;
+        for (let index = 0; index < quantity; index += 1) {
+          item.salesHistory.push(paidAt);
+        }
+      });
     },
   },
 });
 
-export const { syncInventoryProducts, productAddedToCart } = inventorySlice.actions;
+export const { hydrateInventoryItems, syncInventoryProducts, orderPaid } = inventorySlice.actions;
 export default inventorySlice.reducer;

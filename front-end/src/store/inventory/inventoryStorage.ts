@@ -2,7 +2,7 @@ type InventoryItem = {
   productId: string;
   stock: number;
   sold: number;
-  initialStock: number;
+  salesHistory: number[];
 };
 
 type InventoryState = {
@@ -24,6 +24,17 @@ const isInventoryState = (value: unknown): value is InventoryState => {
   return Array.isArray(candidate.items);
 };
 
+const sanitizeInventoryState = (state: InventoryState): InventoryState => ({
+  items: state.items.map((item) => ({
+    ...item,
+    salesHistory: Array.isArray((item as { salesHistory?: unknown }).salesHistory)
+      ? ((item as { salesHistory: unknown[] }).salesHistory.filter(
+          (entry): entry is number => typeof entry === "number"
+        ))
+      : [],
+  })),
+});
+
 export const loadInventoryState = (): InventoryState => {
   const defaults = createDefaultInventoryState();
 
@@ -37,7 +48,7 @@ export const loadInventoryState = (): InventoryState => {
     if (!isInventoryState(parsed)) {
       return defaults;
     }
-    return parsed;
+    return sanitizeInventoryState(parsed);
   } catch {
     return defaults;
   }

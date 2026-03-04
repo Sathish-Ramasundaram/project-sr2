@@ -22,6 +22,7 @@ import {
   setCurrentCustomerEmail,
   setSessionUser,
 } from "./authStorage";
+import { formatBackendError } from "../../utils/apiError";
 
 type LoginApiResponse = {
   token: string;
@@ -79,8 +80,8 @@ function* handleLogin(action: PayloadAction<LoginPayload>) {
     setSessionUser({ id: data.user.id, name: data.user.name, email: data.user.email });
     setCurrentCustomerEmail(data.user.email);
     yield put(loginSuccess({ id: data.user.id, name: data.user.name, email: data.user.email }));
-  } catch {
-    yield put(loginFailure("Login failed. Please try again."));
+  } catch (error) {
+    yield put(loginFailure(formatBackendError(error, "login request")));
   }
 }
 
@@ -128,8 +129,8 @@ function* handleRegister(action: PayloadAction<RegisterPayload>) {
     setSessionUser({ id: data.user.id, name: data.user.name, email: data.user.email });
     setCurrentCustomerEmail(data.user.email);
     yield put(registerSuccess({ id: data.user.id, name: data.user.name, email: data.user.email }));
-  } catch {
-    yield put(registerFailure("Registration failed. Please try again."));
+  } catch (error) {
+    yield put(registerFailure(formatBackendError(error, "registration request")));
   }
 }
 
@@ -174,8 +175,8 @@ function* handleForgotPassword(action: PayloadAction<ForgotPasswordPayload>) {
         responseBody.message ?? "Password reset successful. You can log in now."
       )
     );
-  } catch {
-    yield put(forgotPasswordFailure("Forgot password failed. Please try again."));
+  } catch (error) {
+    yield put(forgotPasswordFailure(formatBackendError(error, "password reset request")));
   }
 }
 

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import AppHeader from "../components/AppHeader";
 import StoreLogo from "../components/StoreLogo";
 import ThemeToggleButton from "../components/ThemeToggleButton";
+import { formatBackendError } from "../utils/apiError";
 
 type FaqItem = {
   id: number;
@@ -13,10 +14,12 @@ function FaqPage() {
   const [question, setQuestion] = useState("");
   const [faqItems, setFaqItems] = useState<FaqItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isFaqLoading, setIsFaqLoading] = useState(true);
 
   const loadFaqItems = async () => {
     try {
       setError(null);
+      setIsFaqLoading(true);
       const response = await fetch("http://localhost:5000/api/faqs");
       if (!response.ok) {
         throw new Error("Failed to load FAQ items");
@@ -24,7 +27,10 @@ function FaqPage() {
       const data = (await response.json()) as FaqItem[];
       setFaqItems(data);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Something went wrong");
+      setFaqItems([]);
+      setError(formatBackendError(loadError, "FAQ items"));
+    } finally {
+      setIsFaqLoading(false);
     }
   };
 
@@ -51,7 +57,7 @@ function FaqPage() {
       setFaqItems((currentItems) => [...currentItems, createdItem]);
       setQuestion("");
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Something went wrong");
+      setError(formatBackendError(submitError, "question submission"));
     }
   };
 
@@ -61,7 +67,7 @@ function FaqPage() {
         left={(
           <Link to="/" className="inline-flex items-center">
             <StoreLogo
-              className="h-12 mt-1"
+              className="h-12"
               imgClassName="h-12 w-auto"
               textClassName="text-xl font-bold"
             />
@@ -115,7 +121,15 @@ function FaqPage() {
 
         <section className="mt-6 rounded-lg border border-slate-300 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
           <h3 className="text-lg font-semibold">Submitted Questions</h3>
-          {faqItems.length === 0 ? (
+          {isFaqLoading ? (
+            <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
+              Loading questions...
+            </p>
+          ) : error && faqItems.length === 0 ? (
+            <p className="mt-2 text-sm text-rose-600 dark:text-rose-400">
+              {error}
+            </p>
+          ) : faqItems.length === 0 ? (
             <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
               No questions yet.
             </p>

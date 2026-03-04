@@ -2,30 +2,50 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { graphqlRequest } from "../api/graphqlClient";
 import {
-  GET_ACTIVE_PRODUCTS_WITH_INVENTORY
+  DELETE_CART_ITEM,
+  GET_CART_ITEM_QUANTITY,
+  GET_MY_CART,
+  INSERT_CART_ITEM,
+  UPDATE_CART_ITEM_QUANTITY
 } from "../api/operations";
 import AppHeader from "../components/AppHeader";
 import ProductCard from "../components/ProductCard";
 import StoreLogo from "../components/StoreLogo";
 import ThemeToggleButton from "../components/ThemeToggleButton";
+import { formatBackendError } from "../utils/apiError";
+import { CATALOGUE_SYNC_KEY } from "../utils/catalogueSync";
 import { logout } from "../store/auth/authSlice";
-import {
-  addToCartRequest,
-  clearCartFeedback,
-  loadCartCountRequest
-} from "../store/cart/cartSlice";
+import { loadCartCountRequest } from "../store/cart/cartSlice";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { syncInventoryProducts } from "../store/inventory/inventorySlice";
 import type { Product } from "../types/product";
 
-type HasuraProductsResponse = {
-  products: Array<{
+type CatalogueProductsResponseItem = {
+  id: string;
+  name: string;
+  quantity: string;
+  price: number;
+  category: string;
+  description: string;
+  imageUrl: string;
+  stock: number;
+};
+
+type MyCartProductsResponse = {
+  cart_items: Array<{
     id: string;
-    name: string;
-    image_url: string;
-    unit: string;
-    price: number;
-    inventory: Array<{ stock: number }>;
+    customer_id: string;
+    quantity: number;
+    product: {
+      id: string;
+      is_active: boolean;
+    } | null;
+  }>;
+};
+
+type CartItemQuantityResponse = {
+  cart_items: Array<{
+    id: string;
+    quantity: number;
   }>;
 };
 
@@ -33,13 +53,19 @@ function CustomerHomePage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
-  const inventoryItems = useAppSelector((state) => state.inventory.items);
   const cartCount = useAppSelector((state) => state.cart.count);
-  const cartInfo = useAppSelector((state) => state.cart.info);
-  const cartError = useAppSelector((state) => state.cart.error);
   const [products, setProducts] = useState<Product[]>([]);
-  const [cartMessage, setCartMessage] = useState<string | null>(null);
+  const [stockByProductId, setStockByProductId] = useState<Record<string, number>>({});
+  const [cartByProductId, setCartByProductId] = useState<Record<string, { cartItemId: string; quantity: number }>>({});
+  const [cartLoadingProductId, setCartLoadingProductId] = useState<string | null>(null);
+  const [inlineCartFeedback, setInlineCartFeedback] = useState<{
+    productId: string;
+    text: string;
+    tone: "success" | "error";
+  } | null>(null);
   const [productsError, setProductsError] = useState<string | null>(null);
+  const [isProductsLoading, setIsProductsLoading] = useState(true);
+  const [reloadSignal, setReloadSignal] = useState(0);
 
   useEffect(() => {
     if (!user?.id) {
@@ -49,57 +75,201 @@ function CustomerHomePage() {
   }, [dispatch, user?.id]);
 
   useEffect(() => {
-    if (cartInfo) {
-      setCartMessage(cartInfo);
-      dispatch(clearCartFeedback());
-      return;
-    }
+    const loadMyCartProducts = async () => {
+      if (!user?.id) {
+        setCartByProductId({});
+        return;
+      }
 
-    if (cartError) {
-      setCartMessage(cartError);
-      dispatch(clearCartFeedback());
-    }
-  }, [cartError, cartInfo, dispatch]);
+      try {
+        const data = await graphqlRequest<MyCartProductsResponse>(GET_MY_CART);
+        const map: Record<string, { cartItemId: string; quantity: number }> = {};
+        data.cart_items
+          .filter((item) => item.customer_id === user.id && item.product?.is_active)
+          .forEach((item) => {
+            if (!item.product) {
+              return;
+            }
+            const existing = map[item.product.id];
+            if (existing) {
+              existing.quantity += item.quantity;
+            } else {
+              map[item.product.id] = { cartItemId: item.id, quantity: item.quantity };
+            }
+          });
+        setCartByProductId(map);
+      } catch {
+        setCartByProductId({});
+      }
+    };
+
+    void loadMyCartProducts();
+  }, [user?.id, cartCount]);
+
+  useEffect(() => {
+    const onStorageChange = (event: StorageEvent) => {
+      if (event.key === CATALOGUE_SYNC_KEY) {
+        setReloadSignal((current) => current + 1);
+      }
+    };
+
+    window.addEventListener("storage", onStorageChange);
+    return () => {
+      window.removeEventListener("storage", onStorageChange);
+    };
+  }, []);
 
   useEffect(() => {
     const loadProducts = async () => {
       try {
         setProductsError(null);
-        const data = await graphqlRequest<HasuraProductsResponse>(
-          GET_ACTIVE_PRODUCTS_WITH_INVENTORY
-        );
+        setIsProductsLoading(true);
+        const response = await fetch("http://localhost:5000/api/catalogue/products");
+        if (!response.ok) {
+          throw new Error("Failed to load products");
+        }
+        const data = (await response.json()) as CatalogueProductsResponseItem[];
 
-        const mappedProducts: Product[] = data.products.map((product) => ({
+        const mappedProducts: Product[] = data.map((product) => ({
           id: product.id,
           name: product.name,
-          imageUrl: product.image_url,
-          quantity: product.unit,
+          imageUrl: product.imageUrl,
+          quantity: product.quantity,
           price: Number(product.price),
-          description: ""
+          description: product.description ?? ""
         }));
+        const stockMap: Record<string, number> = {};
+        data.forEach((product) => {
+          stockMap[product.id] = Number(product.stock ?? 0);
+        });
 
         setProducts(mappedProducts);
-        dispatch(syncInventoryProducts(mappedProducts.map((product) => product.id)));
+        setStockByProductId(stockMap);
       } catch (error) {
-        setProductsError(error instanceof Error ? error.message : "Something went wrong");
+        setProducts([]);
+        setStockByProductId({});
+        setProductsError(formatBackendError(error, "products"));
+      } finally {
+        setIsProductsLoading(false);
       }
     };
 
     void loadProducts();
-  }, [dispatch]);
+  }, [reloadSignal]);
 
   const handleAddToCart = (productId: string) => {
-    const inventory = inventoryItems.find((item) => item.productId === productId);
-    if (!inventory || inventory.stock <= 0) {
-      setCartMessage("Item is out of stock in godown.");
-      return;
-    }
+    void (async () => {
+      const liveStock = stockByProductId[productId] ?? 0;
+      const currentQuantity = cartByProductId[productId]?.quantity ?? 0;
+      if (liveStock <= 0 || currentQuantity >= liveStock) {
+        setInlineCartFeedback({
+          productId,
+          text: "Item is out of stock in godown.",
+          tone: "error"
+        });
+        return;
+      }
 
-    if (!user?.id) {
-      setCartMessage("Customer not found for cart update.");
-      return;
-    }
-    dispatch(addToCartRequest({ customerId: user.id, productId }));
+      if (!user?.id) {
+        setInlineCartFeedback({
+          productId,
+          text: "Customer not found for cart update.",
+          tone: "error"
+        });
+        return;
+      }
+
+      try {
+        setCartLoadingProductId(productId);
+        setInlineCartFeedback(null);
+
+        const cartItemData = await graphqlRequest<CartItemQuantityResponse>(
+          GET_CART_ITEM_QUANTITY,
+          {
+            customerId: user.id,
+            productId
+          }
+        );
+
+        const existing = cartItemData.cart_items[0];
+        if (!existing) {
+          await graphqlRequest(INSERT_CART_ITEM, {
+            customerId: user.id,
+            productId,
+            quantity: 1
+          });
+        } else {
+          await graphqlRequest(UPDATE_CART_ITEM_QUANTITY, {
+            customerId: user.id,
+            productId,
+            quantity: existing.quantity + 1
+          });
+        }
+
+        dispatch(loadCartCountRequest({ customerId: user.id }));
+      } catch (error) {
+        const message = formatBackendError(error, "cart update");
+        if (message.toLowerCase().includes("out of stock")) {
+          setInlineCartFeedback({
+            productId,
+            text: "Item is out of stock in godown.",
+            tone: "error"
+          });
+        }
+      } finally {
+        setCartLoadingProductId(null);
+      }
+    })();
+  };
+
+  const handleDecreaseCart = (productId: string) => {
+    void (async () => {
+      if (!user?.id) {
+        return;
+      }
+      const existing = cartByProductId[productId];
+      if (!existing) {
+        return;
+      }
+
+      try {
+        setCartLoadingProductId(productId);
+        setInlineCartFeedback(null);
+        if (existing.quantity <= 1) {
+          await graphqlRequest(DELETE_CART_ITEM, { cartItemId: existing.cartItemId });
+        } else {
+          await graphqlRequest(UPDATE_CART_ITEM_QUANTITY, {
+            customerId: user.id,
+            productId,
+            quantity: existing.quantity - 1
+          });
+        }
+        dispatch(loadCartCountRequest({ customerId: user.id }));
+      } finally {
+        setCartLoadingProductId(null);
+      }
+    })();
+  };
+
+  const handleRemoveFromCart = (productId: string) => {
+    void (async () => {
+      if (!user?.id) {
+        return;
+      }
+      const existing = cartByProductId[productId];
+      if (!existing) {
+        return;
+      }
+
+      try {
+        setCartLoadingProductId(productId);
+        setInlineCartFeedback(null);
+        await graphqlRequest(DELETE_CART_ITEM, { cartItemId: existing.cartItemId });
+        dispatch(loadCartCountRequest({ customerId: user.id }));
+      } finally {
+        setCartLoadingProductId(null);
+      }
+    })();
   };
 
   const handleLogout = () => {
@@ -115,7 +285,7 @@ function CustomerHomePage() {
         left={(
           <div>
             <StoreLogo
-              className="h-12 mt-1"
+              className="h-12"
               imgClassName="h-12 w-auto"
               textClassName="text-xl font-bold"
             />
@@ -123,7 +293,13 @@ function CustomerHomePage() {
         )}
         right={(
           <div className="flex items-center gap-3">
-            <span className="rounded-md bg-slate-200 px-2 py-1 text-xs font-medium dark:bg-slate-700">Cart: {cartCount}</span>
+            <button
+              type="button"
+              onClick={() => navigate("/customer/cart")}
+              className="rounded-md bg-slate-200 px-2 py-1 text-xs font-medium hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600"
+            >
+              Cart: {cartCount}
+            </button>
             <ThemeToggleButton />
             <button
               type="button"
@@ -142,19 +318,40 @@ function CustomerHomePage() {
             Welcome, {user?.name ?? "Customer"}
           </p>
         </div>
-        {cartMessage && <p className="mb-4 text-sm text-slate-700 dark:text-slate-300">{cartMessage}</p>}
-        {productsError && <p className="mb-4 text-sm text-rose-600 dark:text-rose-400">{productsError}</p>}
-
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onAddToCart={handleAddToCart}
-              showImage={!hiddenPhotoProductIds.has(product.id)}
-            />
-          ))}
-        </section>
+        {isProductsLoading ? (
+          <p className="rounded-lg border border-slate-300 bg-white p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            Loading products...
+          </p>
+        ) : productsError ? (
+          <p className="rounded-lg border border-rose-300 bg-rose-50 p-4 text-sm text-rose-700 dark:border-rose-700 dark:bg-rose-950/20 dark:text-rose-300">
+            {productsError}
+          </p>
+        ) : products.length === 0 ? (
+          <p className="rounded-lg border border-slate-300 bg-white p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            No products available right now.
+          </p>
+        ) : (
+          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAddToCart={handleAddToCart}
+                onDecreaseCart={handleDecreaseCart}
+                onRemoveFromCart={handleRemoveFromCart}
+                cartQuantity={cartByProductId[product.id]?.quantity ?? 0}
+                isOutOfStock={(stockByProductId[product.id] ?? 0) <= 0}
+                isCartUpdating={cartLoadingProductId === product.id}
+                showImage={!hiddenPhotoProductIds.has(product.id)}
+                feedback={
+                  inlineCartFeedback && inlineCartFeedback.productId === product.id
+                    ? { text: inlineCartFeedback.text, tone: inlineCartFeedback.tone }
+                    : null
+                }
+              />
+            ))}
+          </section>
+        )}
       </main>
     </div>
   );

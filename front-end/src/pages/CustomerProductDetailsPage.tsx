@@ -5,6 +5,7 @@ import { GET_PRODUCT_BY_ID } from "../api/operations";
 import AppHeader from "../components/AppHeader";
 import StoreLogo from "../components/StoreLogo";
 import ThemeToggleButton from "../components/ThemeToggleButton";
+import { formatBackendError } from "../utils/apiError";
 import type { Product } from "../types/product";
 
 type HasuraProductByIdResponse = {
@@ -23,16 +24,19 @@ function CustomerProductDetailsPage() {
   const { productId } = useParams();
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [productError, setProductError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadProduct = async () => {
       if (!productId) {
         setProduct(null);
+        setProductError(null);
         setIsLoading(false);
         return;
       }
 
       try {
+        setProductError(null);
         const data = await graphqlRequest<HasuraProductByIdResponse>(
           GET_PRODUCT_BY_ID,
           { id: productId }
@@ -53,8 +57,9 @@ function CustomerProductDetailsPage() {
           description: data.products_by_pk.description ?? ""
         };
         setProduct(mappedProduct);
-      } catch {
+      } catch (error) {
         setProduct(null);
+        setProductError(formatBackendError(error, "product details"));
       } finally {
         setIsLoading(false);
       }
@@ -69,7 +74,7 @@ function CustomerProductDetailsPage() {
       <AppHeader
         left={(
           <StoreLogo
-            className="h-12 mt-1"
+            className="h-12"
             imgClassName="h-12 w-auto"
             textClassName="text-xl font-bold"
           />
@@ -84,7 +89,10 @@ function CustomerProductDetailsPage() {
           </div>
         ) : !product ? (
           <div className="mx-auto max-w-3xl rounded-lg border border-slate-300 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
-            <h2 className="text-2xl font-bold">Product not found</h2>
+            <h2 className="text-2xl font-bold">{productError ? "Unable to load product" : "Product not found"}</h2>
+            {productError ? (
+              <p className="mt-2 text-sm text-rose-600 dark:text-rose-400">{productError}</p>
+            ) : null}
             <Link to="/customer/home" className="mt-3 inline-block text-sm text-sky-700 hover:underline dark:text-sky-400">
               Back
             </Link>

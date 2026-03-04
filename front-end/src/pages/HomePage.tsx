@@ -6,9 +6,6 @@ import StoreLogo from '../components/StoreLogo';
 
 function HomePage() {
   const [isLoginChooserOpen, setIsLoginChooserOpen] = useState(false);
-  const [activeInfoSection, setActiveInfoSection] = useState<
-    'about' | 'contact' | null
-  >(null);
   const heroSlides = [
     'https://raw.githubusercontent.com/Sathish-Ramasundaram/images-srs/refs/heads/main/images/100PercentageCustomerSatisfaction.png',
     'https://raw.githubusercontent.com/Sathish-Ramasundaram/images-srs/refs/heads/main/images/OriginalProductsGuarenteed.png',
@@ -23,15 +20,7 @@ function HomePage() {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-900 dark:text-slate-100">
       <AppHeader
-        left={
-          <Link to="/" className="inline-flex items-center">
-            <StoreLogo
-              className="h-12 mt-1"
-              imgClassName="h-12 w-auto"
-              textClassName="text-xl font-bold"
-            />
-          </Link>
-        }
+        left={<div />}
         right={
           <nav className="flex items-center gap-6 text-sm font-medium">
             <Link to="/catalogue" className="hover:underline">
@@ -57,10 +46,10 @@ function HomePage() {
           <div className="mt-4 flex flex-col items-center">
             <StoreLogo
               className="justify-center"
-              imgClassName="mx-auto h-32 w-auto"
+              imgClassName="mx-auto h-40 w-auto"
               textClassName="text-6xl font-extrabold tracking-tight"
             />
-            <p className="-mt-8 text-lg leading-tight text-slate-700 dark:text-slate-300">
+            <p className="-mt-12 ml-4 text-lg md:text-xl font-medium italic tracking-wide text-slate-700 dark:text-slate-300">
               20 years of trust.
             </p>
           </div>
@@ -88,37 +77,9 @@ function HomePage() {
       </main>
       <section className="px-0.5 pb-8 sm:px-1 md:px-2">
         <div className="p-3">
-          <div className="flex items-center justify-center gap-6 text-sm font-semibold">
-            <button
-              type="button"
-              onClick={() => setActiveInfoSection('about')}
-              className={`rounded-md px-3 py-1 transition-colors ${
-                activeInfoSection === 'about'
-                  ? 'bg-sky-700 text-white dark:bg-sky-500 dark:text-slate-900'
-                  : 'text-sky-700 hover:underline dark:text-sky-400'
-              }`}
-            >
-              About Us
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveInfoSection('contact')}
-              className={`rounded-md px-3 py-1 transition-colors ${
-                activeInfoSection === 'contact'
-                  ? 'bg-sky-700 text-white dark:bg-sky-500 dark:text-slate-900'
-                  : 'text-sky-700 hover:underline dark:text-sky-400'
-              }`}
-            >
-              Contact Us
-            </button>
-          </div>
-
-          {activeInfoSection === 'about' ? (
-            <div
-              className="mx-auto mt-4 max-w-4xl text-left text-sm"
-              id="about-content"
-            >
-              <p className="font-semibold">About SR Stores</p>
+          <div className="mx-auto grid max-w-4xl gap-4 text-left text-sm md:grid-cols-2">
+            <article className="rounded-lg border border-slate-300 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+              <p className="font-semibold">About Us</p>
               <p className="mt-2">
                 SR Stores has served neighborhood families for over 20 years
                 with quality groceries, fair pricing, and trusted daily
@@ -128,19 +89,13 @@ function HomePage() {
                 Branches: Chennai, Coimbatore, Madurai, Tirunelveli | Open: 6:00
                 AM - 10:00 PM.
               </p>
-            </div>
-          ) : null}
-
-          {activeInfoSection === 'contact' ? (
-            <div
-              className="mx-auto mt-4 max-w-4xl text-left text-sm"
-              id="contact-content"
-            >
-              <p className="font-semibold">Contact SR Stores</p>
+            </article>
+            <article className="rounded-lg border border-slate-300 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+              <p className="font-semibold">Contact Us</p>
               <p className="mt-2">Phone: +91 98765 43210</p>
               <p className="mt-1">Email: support@srstores.demo</p>
-            </div>
-          ) : null}
+            </article>
+          </div>
         </div>
       </section>
       <footer className="border-t border-slate-300 bg-white px-6 py-4 text-center text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
@@ -170,7 +125,7 @@ function HomePage() {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Link
-                to="/customer/login"
+                to="/customer/login?switch=1"
                 onClick={closeLoginChooser}
                 className="flex flex-col items-center gap-3 rounded-xl border border-slate-300 px-4 py-5 text-center transition hover:border-blue-500 hover:bg-blue-50 dark:border-slate-600 dark:hover:border-blue-400 dark:hover:bg-slate-700"
               >

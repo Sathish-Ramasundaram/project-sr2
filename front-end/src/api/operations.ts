@@ -82,24 +82,32 @@ query GetCartItemQuantity($customerId: uuid!, $productId: uuid!) {
 }
 `;
 
-export const UPSERT_CART_ITEM = `
-mutation UpsertCartItem($customerId: uuid!, $productId: uuid!, $quantity: Int!) {
+export const INSERT_CART_ITEM = `
+mutation InsertCartItem($customerId: uuid!, $productId: uuid!, $quantity: Int!) {
   insert_cart_items_one(
     object: {
       customer_id: $customerId
       product_id: $productId
       quantity: $quantity
     }
-    on_conflict: {
-      constraint: cart_items_customer_id_product_id_key
-      update_columns: [quantity, updated_at]
-    }
   ) {
     id
-    customer_id
-    product_id
-    quantity
-    updated_at
+  }
+}
+`;
+
+export const UPDATE_CART_ITEM_QUANTITY = `
+mutation UpdateCartItemQuantity($customerId: uuid!, $productId: uuid!, $quantity: Int!) {
+  update_cart_items(
+    where: {
+      customer_id: { _eq: $customerId }
+      product_id: { _eq: $productId }
+    }
+    _set: {
+      quantity: $quantity
+    }
+  ) {
+    affected_rows
   }
 }
 `;

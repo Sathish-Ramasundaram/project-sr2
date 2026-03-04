@@ -39,7 +39,7 @@ function CustomerRegisterPage() {
       <AppHeader
         left={(
           <StoreLogo
-            className="h-12 mt-1"
+            className="h-12"
             imgClassName="h-12 w-auto"
             textClassName="text-xl font-bold"
           />
