@@ -1,15 +1,38 @@
-# SR Store Project
+# SR Store (project-sr2)
 
-SR Store is a full-stack learning project with:
-- Frontend: React + TypeScript + Redux Toolkit + Redux Saga (`front-end`)
-- Backend: Express + TypeScript auth service (`back-end/server/express-api`)
-- Data layer: Hasura GraphQL + PostgreSQL (`back-end/hasura`)
+Full-stack grocery store learning project.
 
-## Project Structure
+## Tech Stack
 
-- `front-end/`: customer/admin UI
-- `back-end/server/express-api/`: auth + API service
-- `back-end/hasura/`: Docker compose for PostgreSQL + Hasura
+- Frontend: React + TypeScript + Redux Toolkit + Redux Saga + Tailwind + Rspack
+- Backend API: Express + TypeScript
+- Data/API layer: Hasura GraphQL + PostgreSQL (Docker)
+
+## Repository Structure
+
+- `front-end/` - customer and admin UI
+- `back-end/server/express-api/` - Express API (auth, catalogue, admin product management, checkout)
+- `back-end/hasura/` - PostgreSQL + Hasura Docker compose
+
+## Implemented Features
+
+- Customer register, login, forgot password
+- Customer home and catalogue powered by backend/Hasura product data
+- Product details page
+- Cart flow with quantity controls (`+/-/remove`)
+- Checkout flow:
+  - create order
+  - create order_items
+  - create payment (demo success)
+  - update order status
+  - clear cart
+- Stock-aware add-to-cart and out-of-stock UI
+- Admin dashboard:
+  - add product
+  - update unit, category, display order, price, reorder level, stock
+  - stock alerts
+  - sales graph (date range / last 30 days)
+- Cross-tab refresh signal for catalogue/customer pages on admin updates
 
 ## Prerequisites
 
@@ -17,11 +40,9 @@ SR Store is a full-stack learning project with:
 - npm
 - Docker Desktop
 
-## Environment Setup
+## Environment
 
-### Backend (`back-end/server/express-api/.env`)
-
-Use:
+Create `back-end/server/express-api/.env`:
 
 ```env
 PORT=5000
@@ -33,103 +54,101 @@ HASURA_JWT_DEFAULT_ROLE=customer
 HASURA_JWT_ALLOWED_ROLES=customer,admin
 ```
 
-### Hasura (`back-end/hasura/docker-compose.yml`)
+Important:
+- `JWT_SECRET` must match the `key` inside Hasura JWT config.
+- `HASURA_ADMIN_SECRET` must match `HASURA_GRAPHQL_ADMIN_SECRET` in docker-compose.
 
-`hasura.environment` must include both admin secret and JWT secret:
+## Run Locally
 
-```yml
-HASURA_GRAPHQL_ADMIN_SECRET: admin123
-HASURA_GRAPHQL_JWT_SECRET: '{"type":"HS256","key":"change-this-to-a-very-strong-secret","claims_namespace":"https://hasura.io/jwt/claims"}'
-```
-
-`key` in `HASURA_GRAPHQL_JWT_SECRET` must match backend `JWT_SECRET`.
-
-## Run the Project
-
-### 1. Start PostgreSQL + Hasura
+### 1) Start PostgreSQL + Hasura
 
 ```powershell
-cd C:\Training\Simple\project\project-sr2\back-end\hasura
+cd back-end\hasura
 docker compose up -d
 ```
 
 Hasura console: `http://localhost:8080/console`
 
-### 2. Start Backend API
+### 2) Start Express API
 
 ```powershell
-cd C:\Training\Simple\project\project-sr2\back-end\server\express-api
+cd back-end\server\express-api
 npm install
 npm run dev
 ```
 
-Backend base URL: `http://localhost:5000`
+API base URL: `http://localhost:5000`
 
-### 3. Start Frontend
+### 3) Start Frontend
 
 ```powershell
-cd C:\Training\Simple\project\project-sr2\front-end
+cd front-end
 npm install
 npm run dev
 ```
 
-## Current Auth Flow
+Frontend URL: check terminal output (commonly `http://localhost:3000` or configured port)
 
-- Frontend calls backend auth APIs:
+## Key API Routes
+
+- Health: `GET /api/health`
+- Auth:
   - `POST /api/auth/register`
   - `POST /api/auth/login`
   - `POST /api/auth/forgot`
-- Backend validates user/password, then signs JWT with Hasura claims.
-- Frontend stores JWT and sends `Authorization: Bearer <token>` to Hasura GraphQL.
-- Hasura enforces table permissions by role (`customer`, `admin`) and user id.
+- Catalogue:
+  - `GET /api/catalogue/products`
+  - `GET /api/catalogue/students`
+- Admin products:
+  - `GET /api/admin/products`
+  - `POST /api/admin/products`
+  - `PATCH /api/admin/products/:productId/category`
+  - `PATCH /api/admin/products/:productId/display-order`
+  - `PATCH /api/admin/products/:productId/unit`
+  - `PATCH /api/admin/products/:productId/price`
+  - `PATCH /api/admin/products/:productId/reorder-threshold`
+  - `PATCH /api/admin/products/:productId/stock`
+- Checkout:
+  - `POST /api/checkout/place-order`
 
-## Current Product and Cart Flow
+## Database Notes
 
-- Home/Catalogue/Product details are read from Hasura `products` table.
-- Cart count and add-to-cart are read/write against `cart_items`.
-- Queries are now role-based via JWT (no frontend admin-secret fallback).
+- Products are sorted by admin-defined `display_order` (then name).
+- Ensure `products.display_order` exists:
 
-## Implemented Features (Current)
+```sql
+ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS display_order integer NOT NULL DEFAULT 9999;
+```
 
-- Customer auth: register, login, forgot password
-- Customer home with live products from Hasura
-- Catalogue with category/sort + students section
-- Product details from Hasura by product id
-- Redux Saga cart flow connected to Hasura
-- Theme toggle and shared header component
-- Storybook setup for frontend components
-- Cypress tests (theme toggle and admin login visual flow)
+## Hasura Permission Checklist (customer role)
 
-## Hasura Permissions Notes
-
-At minimum, verify these for `customer` role:
 - `products`: select active products
-- `cart_items`: row-level filter by `customer_id = X-Hasura-User-Id`
-- `cart_items` select permission has **Allow Aggregations** enabled
+- `cart_items`: row filter `customer_id = X-Hasura-User-Id`
+- `cart_items` select permission has `Allow Aggregations` enabled
 
-Without aggregation permission, cart count query can fail with:
-`field 'cart_items_aggregate' not found in type: 'query_root'`.
+If missing, cart count queries can fail (`cart_items_aggregate` errors).
 
 ## Useful Commands
 
-### Restart Hasura after config change
+### Restart Hasura stack
 
 ```powershell
-cd C:\Training\Simple\project\project-sr2\back-end\hasura
+cd back-end\hasura
 docker compose down
 docker compose up -d
 ```
 
-### Type-check frontend
+### Build frontend
 
 ```powershell
-cd C:\Training\Simple\project\project-sr2\front-end
-npx tsc --noEmit
+cd front-end
+npm run build
 ```
 
-## Production Direction
+### Build backend
 
-- Use Hasura/Postgres as source of truth for products and inventory.
-- Manage day-to-day products from Admin UI/API (not manual SQL edits).
-- Keep migrations + metadata versioned in git.
-- Keep strict role permissions and avoid exposing admin secret to frontend.
+```powershell
+cd back-end\server\express-api
+npm run build
+```
