@@ -171,3 +171,14 @@ mutation CreatePayment(
   }
 }
 `;
+
+export const APPLY_COUPON = `
+mutation ApplyCoupon($input: ApplyCouponInput!) {
+  apply_coupon(input: $input) {
+    success
+    message
+    discount_amount
+    final_total
+  }
+}
+`;

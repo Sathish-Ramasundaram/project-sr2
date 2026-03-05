@@ -3,6 +3,8 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { formatBackendError } from '@/utils/apiError';
 import { orderPaid } from '@/store/inventory/inventorySlice';
 import { loadCartCountRequest } from '@/store/cart/cartSlice';
+import { graphqlRequest } from '@/api/graphqlClient';
+import { APPLY_COUPON } from '@/api/operations';
 import type {
   CartItemResponse,
   CheckoutAddress,
@@ -19,6 +21,8 @@ export function useCheckoutFlow() {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [checkoutInfo, setCheckoutInfo] = useState<string | null>(null);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState(0);
   const deliveryAddressRef = useRef<HTMLElement | null>(null);
   const paymentConfirmationRef = useRef<HTMLElement | null>(null);
 
@@ -28,6 +32,47 @@ export function useCheckoutFlow() {
     setCheckoutInfo(null);
     setShowPaymentStep(true);
   };
+
+  const applyCoupon = useCallback(
+    async (cartTotal: number, cartId: string) => {
+      if (!couponCode.trim()) {
+        setCheckoutError('Please enter a coupon code');
+        return false;
+      }
+
+      try {
+        setCheckoutError(null);
+        const result = (await graphqlRequest(APPLY_COUPON, {
+          input: {
+            cart_id: cartId,
+            coupon_code: couponCode,
+          },
+        })) as {
+          apply_coupon: {
+            success: boolean;
+            message: string;
+            discount_amount: number;
+            final_total: number;
+          };
+        };
+
+        if (result.apply_coupon.success) {
+          setAppliedDiscount(result.apply_coupon.discount_amount);
+          setCheckoutInfo(
+            `Coupon applied! Discount: ₹${result.apply_coupon.discount_amount}`
+          );
+          return true;
+        } else {
+          setCheckoutError(result.apply_coupon.message || 'Invalid coupon');
+          return false;
+        }
+      } catch (error) {
+        setCheckoutError(formatBackendError(error, 'coupon application'));
+        return false;
+      }
+    },
+    [couponCode]
+  );
 
   const handlePlaceOrder = useCallback(
     async (cartItems: CartItemResponse[]) => {
@@ -97,6 +142,8 @@ export function useCheckoutFlow() {
     setAddress(initialAddress);
     setCheckoutError(null);
     setCheckoutInfo(null);
+    setCouponCode('');
+    setAppliedDiscount(0);
   };
 
   return {
@@ -111,9 +158,13 @@ export function useCheckoutFlow() {
     checkoutInfo,
     setCheckoutInfo,
     isPlacingOrder,
+    couponCode,
+    setCouponCode,
+    appliedDiscount,
     deliveryAddressRef,
     paymentConfirmationRef,
     handleAddressSubmit,
+    applyCoupon,
     handlePlaceOrder,
     resetCheckout,
   };

@@ -36,9 +36,13 @@ function CustomerCartPage() {
     checkoutError,
     checkoutInfo,
     isPlacingOrder,
+    couponCode,
+    setCouponCode,
+    appliedDiscount,
     deliveryAddressRef,
     paymentConfirmationRef,
     handleAddressSubmit,
+    applyCoupon,
     handlePlaceOrder: placeOrder,
   } = useCheckoutFlow();
 
@@ -156,6 +160,40 @@ function CustomerCartPage() {
                 onDecreaseQuantity={handleDecreaseQuantity}
                 onRemoveItem={handleRemoveItem}
               />
+              {isCheckoutOpen && (
+                <div className="mt-4 border-t border-slate-200 pt-4 dark:border-slate-700">
+                  <label
+                    htmlFor="coupon-code"
+                    className="block text-sm font-medium"
+                  >
+                    Coupon Code
+                  </label>
+                  <div className="mt-1 flex gap-2">
+                    <input
+                      id="coupon-code"
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      className="flex-1 rounded-md border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-700"
+                      placeholder="Enter coupon code"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        user?.id && applyCoupon(totalAmount, user.id)
+                      }
+                      className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                  {appliedDiscount > 0 && (
+                    <p className="mt-2 text-sm text-green-600 dark:text-green-400">
+                      Discount applied: ₹{appliedDiscount}
+                    </p>
+                  )}
+                </div>
+              )}
             </article>
 
             <article className="rounded-lg border border-slate-300 bg-white p-4 lg:col-span-4 dark:border-slate-700 dark:bg-slate-800">
@@ -165,10 +203,16 @@ function CustomerCartPage() {
                   Total ({cartItems.length} item type
                   {cartItems.length > 1 ? 's' : ''})
                 </p>
-                <p className="text-lg font-bold">
-                  {'\u20B9'}
-                  {totalAmount}
-                </p>
+                <div className="text-right">
+                  {appliedDiscount > 0 && (
+                    <p className="text-sm text-slate-500 line-through dark:text-slate-400">
+                      ₹{totalAmount}
+                    </p>
+                  )}
+                  <p className="text-lg font-bold">
+                    ₹{totalAmount - appliedDiscount}
+                  </p>
+                </div>
               </div>
               {!isCheckoutOpen ? (
                 <button
