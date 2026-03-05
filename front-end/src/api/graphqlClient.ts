@@ -1,4 +1,4 @@
-import { getAuthToken } from "../store/auth/authStorage";
+import { getAuthToken } from "@/store/auth/authStorage";
 
 type GraphQLErrorItem = {
   message: string;

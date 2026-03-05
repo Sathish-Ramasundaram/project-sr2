@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { graphqlRequest } from "../api/graphqlClient";
-import { GET_PRODUCT_BY_ID } from "../api/operations";
-import AppHeader from "../components/AppHeader";
-import StoreLogo from "../components/StoreLogo";
-import ThemeToggleButton from "../components/ThemeToggleButton";
-import { formatBackendError } from "../utils/apiError";
-import type { Product } from "../types/product";
+import { graphqlRequest } from "@/api/graphqlClient";
+import { GET_PRODUCT_BY_ID } from "@/api/operations";
+import AppHeader from "@/components/AppHeader";
+import StoreLogo from "@/components/StoreLogo";
+import ThemeToggleButton from "@/components/ThemeToggleButton";
+import { formatBackendError } from "@/utils/apiError";
+import type { Product } from "@/types/product";
 
 type HasuraProductByIdResponse = {
   products_by_pk: {

@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import { loadInventoryState } from "./inventoryStorage";
+import { loadInventoryState } from "@/store/inventory/inventoryStorage";
 
 type InventoryItem = {
   productId: string;

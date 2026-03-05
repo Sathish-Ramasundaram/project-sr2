@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import { getAdminSession } from "./adminStorage";
+import { getAdminSession } from "@/store/admin/adminStorage";
 
 export type AdminLoginPayload = {
   email: string;

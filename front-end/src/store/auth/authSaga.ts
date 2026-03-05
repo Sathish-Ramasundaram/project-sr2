@@ -15,14 +15,14 @@ import {
   type ForgotPasswordPayload,
   type LoginPayload,
   type RegisterPayload,
-} from "./authSlice";
+} from "@/store/auth/authSlice";
 import {
   setAuthToken,
   clearCurrentCustomerEmail,
   setCurrentCustomerEmail,
   setSessionUser,
-} from "./authStorage";
-import { formatBackendError } from "../../utils/apiError";
+} from "@/store/auth/authStorage";
+import { formatBackendError } from "@/utils/apiError";
 
 type LoginApiResponse = {
   token: string;

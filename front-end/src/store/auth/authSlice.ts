@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import { getSessionUser } from "./authStorage";
+import { getSessionUser } from "@/store/auth/authStorage";
 
 type AuthUser = {
   id: string;

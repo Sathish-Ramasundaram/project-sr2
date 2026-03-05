@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import AppHeader from "../components/AppHeader";
-import StoreLogo from "../components/StoreLogo";
-import ThemeToggleButton from "../components/ThemeToggleButton";
-import { adminLoginRequest, clearAdminFeedback } from "../store/admin/adminSlice";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
+import AppHeader from "@/components/AppHeader";
+import StoreLogo from "@/components/StoreLogo";
+import ThemeToggleButton from "@/components/ThemeToggleButton";
+import { adminLoginRequest, clearAdminFeedback } from "@/store/admin/adminSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 function AdminLoginPage() {
   const dispatch = useAppDispatch();

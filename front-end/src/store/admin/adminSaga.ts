@@ -6,8 +6,8 @@ import {
   adminLoginSuccess,
   adminLogout,
   type AdminLoginPayload,
-} from "./adminSlice";
-import { ADMIN_EMAIL, ADMIN_PASSWORD, clearAdminSession, setAdminSession } from "./adminStorage";
+} from "@/store/admin/adminSlice";
+import { ADMIN_EMAIL, ADMIN_PASSWORD, clearAdminSession, setAdminSession } from "@/store/admin/adminStorage";
 
 function* handleAdminLogin(action: PayloadAction<AdminLoginPayload>) {
   const { email, password } = action.payload;

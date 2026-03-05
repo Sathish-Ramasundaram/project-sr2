@@ -1,20 +1,20 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
-import AdminProtectedRoute from "./AdminProtectedRoute";
-import ProtectedRoute from "./ProtectedRoute";
+import AdminProtectedRoute from "@/routes/AdminProtectedRoute";
+import ProtectedRoute from "@/routes/ProtectedRoute";
 
 const HomePage = lazy(() => import('@/pages/HomePage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
-const CataloguePage = lazy(() => import("../pages/CataloguePage"));
-const FaqPage = lazy(() => import("../pages/FaqPage"));
-const CustomerLoginPage = lazy(() => import("../pages/CustomerLoginPage"));
-const CustomerForgotPasswordPage = lazy(() => import("../pages/CustomerForgotPasswordPage"));
-const CustomerRegisterPage = lazy(() => import("../pages/CustomerRegisterPage"));
-const CustomerHomePage = lazy(() => import("../pages/CustomerHomePage"));
-const CustomerCartPage = lazy(() => import("../pages/CustomerCartPage"));
-const CustomerProductDetailsPage = lazy(() => import("../pages/CustomerProductDetailsPage"));
-const AdminLoginPage = lazy(() => import("../pages/AdminLoginPage"));
-const AdminDashboardPage = lazy(() => import("../pages/AdminDashboardPage"));
+const CataloguePage = lazy(() => import("@/pages/CataloguePage"));
+const FaqPage = lazy(() => import("@/pages/FaqPage"));
+const CustomerLoginPage = lazy(() => import("@/pages/CustomerLoginPage"));
+const CustomerForgotPasswordPage = lazy(() => import("@/pages/CustomerForgotPasswordPage"));
+const CustomerRegisterPage = lazy(() => import("@/pages/CustomerRegisterPage"));
+const CustomerHomePage = lazy(() => import("@/pages/CustomerHomePage"));
+const CustomerCartPage = lazy(() => import("@/pages/CustomerCartPage"));
+const CustomerProductDetailsPage = lazy(() => import("@/pages/CustomerProductDetailsPage"));
+const AdminLoginPage = lazy(() => import("@/pages/AdminLoginPage"));
+const AdminDashboardPage = lazy(() => import("@/pages/AdminDashboardPage"));
 
 export function AppRouter() {
   return (

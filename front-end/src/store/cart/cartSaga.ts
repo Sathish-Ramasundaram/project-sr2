@@ -1,12 +1,12 @@
 import { call, put, takeLatest } from "redux-saga/effects";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import { graphqlRequest } from "../../api/graphqlClient";
+import { graphqlRequest } from "@/api/graphqlClient";
 import {
   GET_CART_COUNT_BY_CUSTOMER,
   GET_CART_ITEM_QUANTITY,
   INSERT_CART_ITEM,
   UPDATE_CART_ITEM_QUANTITY
-} from "../../api/operations";
+} from "@/api/operations";
 import {
   addToCartFailure,
   addToCartRequest,
@@ -16,8 +16,8 @@ import {
   loadCartCountSuccess,
   type AddToCartPayload,
   type LoadCartCountPayload
-} from "./cartSlice";
-import { formatBackendError } from "../../utils/apiError";
+} from "@/store/cart/cartSlice";
+import { formatBackendError } from "@/utils/apiError";
 
 type CartCountResponse = {
   cart_items_aggregate: {

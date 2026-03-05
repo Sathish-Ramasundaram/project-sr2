@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useAppSelector } from "../store/hooks";
+import { useAppSelector } from "@/store/hooks";
 
 function AdminProtectedRoute() {
   const isAuthenticated = useAppSelector((state) => state.admin.isAuthenticated);

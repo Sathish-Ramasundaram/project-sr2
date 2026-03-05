@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
-import AppHeader from "../components/AppHeader";
-import StoreLogo from "../components/StoreLogo";
-import ThemeToggleButton from "../components/ThemeToggleButton";
-import { clearAuthFeedback, loginRequest, logout } from "../store/auth/authSlice";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { isCustomerActiveInAnotherTab } from "../store/auth/authStorage";
+import AppHeader from "@/components/AppHeader";
+import StoreLogo from "@/components/StoreLogo";
+import ThemeToggleButton from "@/components/ThemeToggleButton";
+import { clearAuthFeedback, loginRequest, logout } from "@/store/auth/authSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { isCustomerActiveInAnotherTab } from "@/store/auth/authStorage";
 
 function CustomerLoginPage() {
   const dispatch = useAppDispatch();

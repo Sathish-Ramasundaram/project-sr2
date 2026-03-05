@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import AppHeader from "../components/AppHeader";
-import StoreLogo from "../components/StoreLogo";
-import ThemeToggleButton from "../components/ThemeToggleButton";
-import { clearAuthFeedback, forgotPasswordRequest } from "../store/auth/authSlice";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
+import AppHeader from "@/components/AppHeader";
+import StoreLogo from "@/components/StoreLogo";
+import ThemeToggleButton from "@/components/ThemeToggleButton";
+import { clearAuthFeedback, forgotPasswordRequest } from "@/store/auth/authSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 function CustomerForgotPasswordPage() {
   const dispatch = useAppDispatch();

@@ -1,6 +1,6 @@
 import React from "react";
 import type { Meta, StoryObj } from 'storybook-react-rsbuild';
-import ThemeToggleButton from './ThemeToggleButton';
+import ThemeToggleButton from '@/components/ThemeToggleButton';
 
 const meta = {
   title: 'Components/ThemeToggleButton',
