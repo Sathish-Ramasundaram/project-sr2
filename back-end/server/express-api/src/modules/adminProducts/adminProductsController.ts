@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
 import {
   createProduct,
+  findProductByName,
   getAdminProducts,
   getSalesSummary,
+  setProductActive,
   updateCategory,
   updateDisplayOrder,
   updatePrice,
@@ -83,14 +85,52 @@ export async function createProductHandler(req: Request, res: Response) {
   }
 
   try {
-    await createProduct({
-      name,
-      description,
-      imageUrl
-    });
+    const existing = await findProductByName(name);
+    if (existing) {
+      if (!existing.is_active) {
+        res.status(409).json({
+          code: "PRODUCT_DEACTIVATED",
+          productId: existing.id,
+          name: existing.name,
+          message: `"${existing.name}" already exists but is deactivated.`
+        });
+        return;
+      }
+      res.status(409).json({ message: `"${existing.name}" already exists.` });
+      return;
+    }
+
+    await createProduct({ name, description, imageUrl });
     res.status(201).json({ message: "Product created successfully." });
   } catch (error) {
     respondServerError(res, error, "Failed to create product.");
+  }
+}
+
+export async function updateProductActiveHandler(req: Request, res: Response) {
+  const productId = readProductIdParam(req);
+  if (!productId) {
+    res.status(400).json({ message: "productId is required." });
+    return;
+  }
+
+  const isActive = (req.body as { isActive?: unknown } | undefined)?.isActive;
+  if (typeof isActive !== "boolean") {
+    res.status(400).json({ message: "isActive must be a boolean." });
+    return;
+  }
+
+  try {
+    const updated = await setProductActive(productId, isActive);
+    if (updated === null) {
+      res.status(404).json({ message: "Product not found." });
+      return;
+    }
+    res.json({
+      message: isActive ? "Product reactivated successfully." : "Product deactivated successfully."
+    });
+  } catch (error) {
+    respondServerError(res, error, "Failed to update product status.");
   }
 }
 

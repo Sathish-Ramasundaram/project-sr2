@@ -24,6 +24,7 @@ type UpdateProductFormProps = {
   onReorderThresholdInputChange: (value: string) => void;
   onStockInputChange: (value: string) => void;
   onUpdateItemDetails: () => void;
+  onDeactivateProduct: () => void;
 };
 
 function UpdateProductForm({
@@ -47,6 +48,7 @@ function UpdateProductForm({
   onReorderThresholdInputChange,
   onStockInputChange,
   onUpdateItemDetails,
+  onDeactivateProduct,
 }: UpdateProductFormProps) {
   return (
     <div className="mt-5 border-t border-slate-200 pt-4 dark:border-slate-700">
@@ -156,14 +158,26 @@ function UpdateProductForm({
           />
         </div>
 
-        <button
-          type="button"
-          disabled={isActionLoading}
-          onClick={onUpdateItemDetails}
-          className="rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-70 md:col-span-2 dark:bg-sky-500 dark:text-slate-900 dark:hover:bg-sky-400"
-        >
-          {isActionLoading ? 'Updating...' : 'Update'}
-        </button>
+        <div className="flex gap-2 md:col-span-2">
+          <button
+            type="button"
+            disabled={isActionLoading}
+            onClick={onUpdateItemDetails}
+            className="flex-1 rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-70 dark:bg-sky-500 dark:text-slate-900 dark:hover:bg-sky-400"
+          >
+            {isActionLoading ? 'Updating...' : 'Update'}
+          </button>
+          {selectedProductId ? (
+            <button
+              type="button"
+              disabled={isActionLoading}
+              onClick={onDeactivateProduct}
+              className="rounded-md bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-70 dark:bg-rose-500 dark:hover:bg-rose-400"
+            >
+              Deactivate
+            </button>
+          ) : null}
+        </div>
         {actionTarget === 'update' && actionError ? (
           <p className="text-sm text-rose-600 md:col-span-2 dark:text-rose-400">
             {actionError}

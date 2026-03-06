@@ -76,6 +76,7 @@ type UpdateProductDisplayOrderResponse = {
   };
 };
 
+
 type UpdateInventoryStockResponse = {
   update_inventory: {
     affected_rows: number;
@@ -87,6 +88,21 @@ type UpdateProductCategoryResponse = {
   update_products: {
     affected_rows: number;
     returning: Array<{ id: string; category: string | null }>;
+  };
+};
+
+type FindProductByNameResponse = {
+  products: Array<{
+    id: string;
+    name: string;
+    is_active: boolean;
+  }>;
+};
+
+type SetProductActiveResponse = {
+  update_products: {
+    affected_rows: number;
+    returning: Array<{ id: string; is_active: boolean }>;
   };
 };
 
@@ -226,6 +242,31 @@ mutation UpdateProductPrice($productId: uuid!, $price: numeric!) {
     returning {
       id
       price
+    }
+  }
+}
+`;
+
+const FIND_PRODUCT_BY_NAME = `
+query FindProductByName($name: String!) {
+  products(where: { name: { _ilike: $name } }, limit: 1) {
+    id
+    name
+    is_active
+  }
+}
+`;
+
+const SET_PRODUCT_ACTIVE = `
+mutation SetProductActive($productId: uuid!, $isActive: Boolean!) {
+  update_products(
+    where: { id: { _eq: $productId } }
+    _set: { is_active: $isActive }
+  ) {
+    affected_rows
+    returning {
+      id
+      is_active
     }
   }
 }
@@ -414,19 +455,37 @@ export async function updatePrice(productId: string, price: number) {
 }
 
 export async function updateDisplayOrder(productId: string, displayOrder: number) {
-  const result = await hasuraAdminRequest<UpdateProductDisplayOrderResponse>(
-    UPDATE_PRODUCT_DISPLAY_ORDER,
-    {
-      productId,
-      displayOrder
-    }
-  );
+  const data = await hasuraAdminRequest<AdminProductsResponse>(GET_ACTIVE_PRODUCTS);
+  const allProducts = data.products;
 
-  if (result.update_products.affected_rows === 0) {
+  if (!allProducts.find((p) => p.id === productId)) {
     return null;
   }
 
-  return result.update_products.returning[0]?.display_order ?? null;
+  // Remove target from the list, keeping current sort order
+  const others = allProducts.filter((p) => p.id !== productId);
+
+  // Insert target at the desired position (clamp to valid range)
+  const insertAt = Math.min(displayOrder, others.length);
+  const reordered = [...others.slice(0, insertAt), { id: productId }, ...others.slice(insertAt)];
+
+  // Update only products whose display_order actually changed
+  await Promise.all(
+    reordered
+      .map((p, index) => ({ id: p.id, newOrder: index }))
+      .filter(({ id, newOrder }) => {
+        const current = allProducts.find((p) => p.id === id);
+        return current?.display_order !== newOrder;
+      })
+      .map(({ id, newOrder }) =>
+        hasuraAdminRequest<UpdateProductDisplayOrderResponse>(UPDATE_PRODUCT_DISPLAY_ORDER, {
+          productId: id,
+          displayOrder: newOrder
+        })
+      )
+  );
+
+  return displayOrder;
 }
 
 export async function updateStock(productId: string, stock: number) {
@@ -453,4 +512,22 @@ export async function updateCategory(productId: string, category: string) {
   }
 
   return result.update_products.returning[0]?.category ?? null;
+}
+
+export async function findProductByName(name: string) {
+  const result = await hasuraAdminRequest<FindProductByNameResponse>(FIND_PRODUCT_BY_NAME, { name });
+  return result.products[0] ?? null;
+}
+
+export async function setProductActive(productId: string, isActive: boolean) {
+  const result = await hasuraAdminRequest<SetProductActiveResponse>(SET_PRODUCT_ACTIVE, {
+    productId,
+    isActive
+  });
+
+  if (result.update_products.affected_rows === 0) {
+    return null;
+  }
+
+  return result.update_products.returning[0]?.is_active ?? null;
 }

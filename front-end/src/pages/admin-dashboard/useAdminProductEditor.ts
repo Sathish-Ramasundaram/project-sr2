@@ -29,15 +29,19 @@ export function useAdminProductEditor() {
   const [actionTarget, setActionTarget] = useState<ActionTarget>(null);
   const [isActionLoading, setIsActionLoading] = useState(false);
 
+  const [pendingReactivateProductId, setPendingReactivateProductId] = useState<string | null>(null);
+  const [pendingReactivateName, setPendingReactivateName] = useState<string | null>(null);
+
   const applySelectionToForm = useCallback((nextProducts: AdminProduct[], productId: string) => {
-    const selected = nextProducts.find((item) => item.id === productId);
-    if (!selected) {
+    const selectedIndex = nextProducts.findIndex((item) => item.id === productId);
+    if (selectedIndex === -1) {
       return false;
     }
+    const selected = nextProducts[selectedIndex];
 
     setUnitInput(selected.quantity ?? "");
     setPriceInput(`${selected.price ?? 0}`);
-    setDisplayOrderInput(`${selected.displayOrder ?? 1}`);
+    setDisplayOrderInput(`${selectedIndex + 1}`);
     setReorderThresholdInput(`${selected.reorderThreshold}`);
     setStockInput(`${selected.stock ?? 0}`);
     setSelectedCategory(selected.category ?? "Essentials");
@@ -119,6 +123,8 @@ export function useAdminProductEditor() {
 
   const handleNewProductSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setPendingReactivateProductId(null);
+    setPendingReactivateName(null);
     try {
       setActionError(null);
       setActionInfo(null);
@@ -127,9 +133,7 @@ export function useAdminProductEditor() {
 
       const response = await fetch("http://localhost:5000/api/admin/products", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newProductForm.name,
           description: newProductForm.description,
@@ -137,7 +141,14 @@ export function useAdminProductEditor() {
         })
       });
 
-      const body = (await response.json()) as { message?: string };
+      const body = (await response.json()) as { message?: string; code?: string; productId?: string; name?: string };
+
+      if (response.status === 409 && body.code === "PRODUCT_DEACTIVATED" && body.productId) {
+        setPendingReactivateProductId(body.productId);
+        setPendingReactivateName(body.name ?? newProductForm.name);
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(body.message ?? "Failed to add product");
       }
@@ -147,6 +158,81 @@ export function useAdminProductEditor() {
       await refreshProducts();
     } catch (error) {
       setActionError(formatBackendError(error, "add product"));
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleConfirmReactivate = async () => {
+    if (!pendingReactivateProductId) return;
+    try {
+      setActionError(null);
+      setActionInfo(null);
+      setActionTarget("add");
+      setIsActionLoading(true);
+
+      const response = await fetch(
+        `http://localhost:5000/api/admin/products/${pendingReactivateProductId}/active`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isActive: true })
+        }
+      );
+
+      const body = (await response.json()) as { message?: string };
+      if (!response.ok) {
+        throw new Error(body.message ?? "Failed to reactivate product");
+      }
+
+      setActionInfo(body.message ?? "Product reactivated successfully.");
+      setNewProductForm(initialNewProductForm);
+      setPendingReactivateProductId(null);
+      setPendingReactivateName(null);
+      await refreshProducts();
+      emitCatalogueSync();
+    } catch (error) {
+      setActionError(formatBackendError(error, "reactivate product"));
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleCancelReactivate = () => {
+    setPendingReactivateProductId(null);
+    setPendingReactivateName(null);
+  };
+
+  const handleDeactivateProduct = async () => {
+    if (!selectedProductId) return;
+    try {
+      setActionError(null);
+      setActionInfo(null);
+      setActionTarget("update");
+      setIsActionLoading(true);
+
+      const response = await fetch(
+        `http://localhost:5000/api/admin/products/${selectedProductId}/active`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isActive: false })
+        }
+      );
+
+      const body = (await response.json()) as { message?: string };
+      if (!response.ok) {
+        throw new Error(body.message ?? "Failed to deactivate product");
+      }
+
+      setActionInfo(body.message ?? "Product deactivated successfully.");
+      setSelectedProductId("");
+      setIsEditDirty(false);
+      resetEditForm();
+      await refreshProducts();
+      emitCatalogueSync();
+    } catch (error) {
+      setActionError(formatBackendError(error, "deactivate product"));
     } finally {
       setIsActionLoading(false);
     }
@@ -174,7 +260,7 @@ export function useAdminProductEditor() {
         fetch(`http://localhost:5000/api/admin/products/${selectedProductId}/display-order`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ displayOrder: Number(displayOrderInput) })
+          body: JSON.stringify({ displayOrder: Math.max(0, Number(displayOrderInput) - 1) })
         }),
         fetch(`http://localhost:5000/api/admin/products/${selectedProductId}/unit`, {
           method: "PATCH",
@@ -278,9 +364,13 @@ export function useAdminProductEditor() {
     actionTarget,
     actionError,
     actionInfo,
+    pendingReactivateName,
     handleNewProductSubmit,
     handleNewProductFormChange,
     handleSelectedProductChange,
+    handleConfirmReactivate,
+    handleCancelReactivate,
+    handleDeactivateProduct,
     markDirtyAndSetSelectedCategory,
     markDirtyAndSetDisplayOrder,
     markDirtyAndSetUnit,

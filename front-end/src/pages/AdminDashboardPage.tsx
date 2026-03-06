@@ -32,9 +32,13 @@ function AdminDashboardPage() {
     actionTarget,
     actionError,
     actionInfo,
+    pendingReactivateName,
     handleNewProductSubmit,
     handleNewProductFormChange,
     handleSelectedProductChange,
+    handleConfirmReactivate,
+    handleCancelReactivate,
+    handleDeactivateProduct,
     markDirtyAndSetSelectedCategory,
     markDirtyAndSetDisplayOrder,
     markDirtyAndSetUnit,
@@ -58,7 +62,6 @@ function AdminDashboardPage() {
     setFromDate,
     toDate,
     setToDate,
-    soldMap,
     graphSalesByProduct,
     maxSalesValue
   } = useAdminSalesData();
@@ -145,6 +148,7 @@ function AdminDashboardPage() {
             actionTarget={actionTarget}
             actionError={actionError}
             actionInfo={actionInfo}
+            pendingReactivateName={pendingReactivateName}
             onNewProductSubmit={handleNewProductSubmit}
             onNewProductFormChange={handleNewProductFormChange}
             onSelectedProductChange={handleSelectedProductChange}
@@ -155,11 +159,13 @@ function AdminDashboardPage() {
             onReorderThresholdInputChange={markDirtyAndSetReorderThreshold}
             onStockInputChange={markDirtyAndSetStock}
             onUpdateItemDetails={handleUpdateItemDetails}
+            onConfirmReactivate={handleConfirmReactivate}
+            onCancelReactivate={handleCancelReactivate}
+            onDeactivateProduct={handleDeactivateProduct}
           />
           <AdminInventorySection
             isProductsLoading={isProductsLoading}
             products={products}
-            soldMap={soldMap}
           />
         </section>
       </main>

@@ -6,6 +6,7 @@ import {
   updateCategoryHandler,
   updateDisplayOrderHandler,
   updatePriceHandler,
+  updateProductActiveHandler,
   updateReorderThresholdHandler,
   updateStockHandler,
   updateUnitHandler
@@ -22,5 +23,6 @@ adminProductsRouter.patch("/:productId/price", updatePriceHandler);
 adminProductsRouter.patch("/:productId/display-order", updateDisplayOrderHandler);
 adminProductsRouter.patch("/:productId/stock", updateStockHandler);
 adminProductsRouter.patch("/:productId/category", updateCategoryHandler);
+adminProductsRouter.patch("/:productId/active", updateProductActiveHandler);
 
 export default adminProductsRouter;

@@ -27,6 +27,7 @@ type AdminProductManagementSectionProps = {
   actionTarget: 'add' | 'update' | null;
   actionError: string | null;
   actionInfo: string | null;
+  pendingReactivateName: string | null;
   onNewProductSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onNewProductFormChange: (field: keyof NewProductForm, value: string) => void;
   onSelectedProductChange: (value: string) => void;
@@ -37,6 +38,9 @@ type AdminProductManagementSectionProps = {
   onReorderThresholdInputChange: (value: string) => void;
   onStockInputChange: (value: string) => void;
   onUpdateItemDetails: () => void;
+  onConfirmReactivate: () => void;
+  onCancelReactivate: () => void;
+  onDeactivateProduct: () => void;
 };
 
 function AdminProductManagementSection({
@@ -53,6 +57,7 @@ function AdminProductManagementSection({
   actionTarget,
   actionError,
   actionInfo,
+  pendingReactivateName,
   onNewProductSubmit,
   onNewProductFormChange,
   onSelectedProductChange,
@@ -63,6 +68,9 @@ function AdminProductManagementSection({
   onReorderThresholdInputChange,
   onStockInputChange,
   onUpdateItemDetails,
+  onConfirmReactivate,
+  onCancelReactivate,
+  onDeactivateProduct,
 }: AdminProductManagementSectionProps) {
   return (
     <article className="rounded-lg border border-slate-300 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
@@ -72,8 +80,11 @@ function AdminProductManagementSection({
         actionTarget={actionTarget}
         actionError={actionError}
         actionInfo={actionInfo}
+        pendingReactivateName={pendingReactivateName}
         onNewProductSubmit={onNewProductSubmit}
         onNewProductFormChange={onNewProductFormChange}
+        onConfirmReactivate={onConfirmReactivate}
+        onCancelReactivate={onCancelReactivate}
       />
 
       <UpdateProductForm
@@ -97,6 +108,7 @@ function AdminProductManagementSection({
         onReorderThresholdInputChange={onReorderThresholdInputChange}
         onStockInputChange={onStockInputChange}
         onUpdateItemDetails={onUpdateItemDetails}
+        onDeactivateProduct={onDeactivateProduct}
       />
     </article>
   );

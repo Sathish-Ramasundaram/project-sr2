@@ -12,8 +12,11 @@ type AddProductFormProps = {
   actionTarget: 'add' | 'update' | null;
   actionError: string | null;
   actionInfo: string | null;
+  pendingReactivateName: string | null;
   onNewProductSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onNewProductFormChange: (field: keyof NewProductForm, value: string) => void;
+  onConfirmReactivate: () => void;
+  onCancelReactivate: () => void;
 };
 
 function AddProductForm({
@@ -22,8 +25,11 @@ function AddProductForm({
   actionTarget,
   actionError,
   actionInfo,
+  pendingReactivateName,
   onNewProductSubmit,
   onNewProductFormChange,
+  onConfirmReactivate,
+  onCancelReactivate,
 }: AddProductFormProps) {
   return (
     <>
@@ -61,6 +67,31 @@ function AddProductForm({
         >
           {isActionLoading ? 'Saving...' : 'Add Product'}
         </button>
+        {pendingReactivateName ? (
+          <div className="rounded-md border border-amber-300 bg-amber-50 p-3 dark:border-amber-600 dark:bg-amber-900/20">
+            <p className="text-sm text-amber-800 dark:text-amber-300">
+              <strong>{pendingReactivateName}</strong> already exists but is deactivated. Do you want to reactivate it?
+            </p>
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                onClick={onConfirmReactivate}
+                disabled={isActionLoading}
+                className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-70"
+              >
+                {isActionLoading ? 'Reactivating...' : 'Yes, Reactivate'}
+              </button>
+              <button
+                type="button"
+                onClick={onCancelReactivate}
+                disabled={isActionLoading}
+                className="rounded-md border border-slate-300 px-3 py-1 text-xs font-medium hover:bg-slate-100 disabled:opacity-70 dark:border-slate-600 dark:hover:bg-slate-700"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : null}
         {actionTarget === 'add' && actionError ? (
           <p className="text-sm text-rose-600 dark:text-rose-400">
             {actionError}

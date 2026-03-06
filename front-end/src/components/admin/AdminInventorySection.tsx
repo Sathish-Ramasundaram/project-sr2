@@ -9,13 +9,11 @@ type InventoryItem = {
 type AdminInventorySectionProps = {
   isProductsLoading: boolean;
   products: InventoryItem[];
-  soldMap: Map<string, number>;
 };
 
 function AdminInventorySection({
   isProductsLoading,
-  products,
-  soldMap
+  products
 }: AdminInventorySectionProps) {
   return (
     <article className="rounded-lg border border-slate-300 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
@@ -24,11 +22,11 @@ function AdminInventorySection({
         <table className="min-w-full text-left text-sm">
           <thead>
             <tr className="border-b border-slate-300 dark:border-slate-700">
+              <th className="px-2 py-2">#</th>
               <th className="px-2 py-2">Item</th>
               <th className="px-2 py-2">Category</th>
               <th className="px-2 py-2">Stock</th>
               <th className="px-2 py-2">Reorder</th>
-              <th className="px-2 py-2">Sold</th>
             </tr>
           </thead>
           <tbody>
@@ -45,13 +43,13 @@ function AdminInventorySection({
                 </td>
               </tr>
             ) : (
-              products.map((item) => (
+              products.map((item, index) => (
                 <tr key={item.id} className="border-b border-slate-200 dark:border-slate-700">
+                  <td className="px-2 py-2">{index + 1}</td>
                   <td className="px-2 py-2">{item.name}</td>
                   <td className="px-2 py-2">{item.category}</td>
                   <td className="px-2 py-2">{item.stock}</td>
                   <td className="px-2 py-2">{item.reorderThreshold}</td>
-                  <td className="px-2 py-2">{soldMap.get(item.id) ?? 0}</td>
                 </tr>
               ))
             )}
