@@ -10,7 +10,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_DB: sr_store
     ports:
-      - '5432:5432'
+      - '5433:5432'
     volumes:
       - pg_data:/var/lib/postgresql/data
 
@@ -31,3 +31,5 @@ services:
 
 volumes:
   pg_data:
+    external: true
+    name: hasura_pg_data
