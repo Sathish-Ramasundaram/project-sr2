@@ -2,7 +2,7 @@ const path = require('path');
 const HtmlRspackPlugin = require('@rspack/plugin-html').default;
 
 module.exports = {
-  devtool: "source-map",
+  devtool: 'source-map',
   entry: './src/index.tsx',
   output: {
     path: path.resolve(__dirname, 'dist'),

@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import AppHeader from '@/components/AppHeader';
+import PageMain from '@/components/PageMain';
+import PageShell from '@/components/PageShell';
 import StoreLogo from '@/components/StoreLogo';
 import ThemeToggleButton from '@/components/ThemeToggleButton';
 import FaqForm from '@/pages/faq/FaqForm';
@@ -11,7 +13,7 @@ function FaqPage() {
     useFaqData();
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-900 dark:text-slate-100">
+    <PageShell>
       <AppHeader
         left={
           <Link to="/" className="inline-flex items-center">
@@ -35,7 +37,7 @@ function FaqPage() {
         }
       />
 
-      <main className="mx-auto max-w-4xl px-6 py-10">
+      <PageMain className="mx-auto max-w-4xl py-10">
         <h2 className="text-3xl font-extrabold">FAQ</h2>
         <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
           Enter your question and submit.
@@ -58,8 +60,8 @@ function FaqPage() {
           faqItems={faqItems}
           error={error}
         />
-      </main>
-    </div>
+      </PageMain>
+    </PageShell>
   );
 }
 

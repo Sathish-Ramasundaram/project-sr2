@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import AppHeader from "@/components/AppHeader";
+import PageMain from "@/components/PageMain";
+import PageShell from "@/components/PageShell";
 import StoreLogo from "@/components/StoreLogo";
 import ThemeToggleButton from "@/components/ThemeToggleButton";
 import { clearAuthFeedback, loginRequest, logout } from "@/store/auth/authSlice";
@@ -53,7 +55,7 @@ function CustomerLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-900 dark:text-slate-100">
+    <PageShell>
       <AppHeader
         left={(
           <StoreLogo
@@ -65,7 +67,7 @@ function CustomerLoginPage() {
         right={<ThemeToggleButton />}
       />
 
-      <main className="px-6 py-10">
+      <PageMain className="py-10">
         <div className="mx-auto max-w-md rounded-lg border border-slate-300 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
           <h2 className="text-2xl font-bold">Customer Login</h2>
           <form onSubmit={handleSubmit} className="mt-5 space-y-4">
@@ -119,8 +121,8 @@ function CustomerLoginPage() {
             </Link>
           </div>
         </div>
-      </main>
-    </div>
+      </PageMain>
+    </PageShell>
   );
 }
 

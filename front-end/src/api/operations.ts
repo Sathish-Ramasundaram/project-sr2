@@ -182,3 +182,26 @@ mutation ApplyCoupon($input: ApplyCouponInput!) {
   }
 }
 `;
+
+export const TRACK_ORDER = `
+query TrackOrder($orderId: ID!) {
+  trackOrder(orderId: $orderId) {
+    status
+    estimatedTime
+    order {
+      orderId
+      placedAt
+      orderStatus
+      totalAmount
+      items {
+        productId
+        productName
+        quantity
+        unitPrice
+        lineTotal
+        unit
+      }
+    }
+  }
+}
+`;

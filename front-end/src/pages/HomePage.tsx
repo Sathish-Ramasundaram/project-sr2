@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import AppHeader from '@/components/AppHeader';
+import PageMain from '@/components/PageMain';
+import PageShell from '@/components/PageShell';
 import ThemeToggleButton from '@/components/ThemeToggleButton';
 import HeroSection from '@/components/HeroSection';
 import AboutContactSection from '@/components/AboutContactSection';
@@ -13,7 +15,24 @@ function HomePage() {
     useLoginChooser();
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-900 dark:text-slate-100">
+    <PageShell>
+      <style>
+        {`
+          .home-marquee-track {
+            animation: home-marquee 60s linear infinite;
+          }
+
+          @keyframes home-marquee {
+            from {
+              transform: translateX(0);
+            }
+
+            to {
+              transform: translateX(-50%);
+            }
+          }
+        `}
+      </style>
       <AppHeader
         left={<div />}
         right={
@@ -36,19 +55,13 @@ function HomePage() {
         }
       />
 
-      <main className="flex min-h-[calc(100vh-73px)] items-start justify-center px-0.5 sm:px-1 md:px-2 pt-12">
+      <PageMain className="flex px-0.5 sm:px-1 md:px-2 pt-12">
         <HeroSection />
-      </main>
+      </PageMain>
       <AboutContactSection />
       <Footer />
       <LoginChooser isOpen={isLoginChooserOpen} onClose={closeLoginChooser} />
-      <style>{`
-        @keyframes home-marquee {
-          from { transform: translateX(0); }
-          to { transform: translateX(-50%); }
-        }
-      `}</style>
-    </div>
+    </PageShell>
   );
 }
 

@@ -3,6 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import { graphqlRequest } from "@/api/graphqlClient";
 import { GET_PRODUCT_BY_ID } from "@/api/operations";
 import AppHeader from "@/components/AppHeader";
+import PageMain from "@/components/PageMain";
+import PageShell from "@/components/PageShell";
 import StoreLogo from "@/components/StoreLogo";
 import ThemeToggleButton from "@/components/ThemeToggleButton";
 import { formatBackendError } from "@/utils/apiError";
@@ -70,7 +72,7 @@ function CustomerProductDetailsPage() {
   }, [productId]);
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-900 dark:text-slate-100">
+    <PageShell>
       <AppHeader
         left={(
           <StoreLogo
@@ -82,7 +84,7 @@ function CustomerProductDetailsPage() {
         right={<ThemeToggleButton />}
       />
 
-      <main className="px-6 py-10">
+      <PageMain className="py-10">
         {isLoading ? (
           <div className="mx-auto max-w-3xl rounded-lg border border-slate-300 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
             <h2 className="text-2xl font-bold">Loading product...</h2>
@@ -118,8 +120,8 @@ function CustomerProductDetailsPage() {
             </div>
           </div>
         )}
-      </main>
-    </div>
+      </PageMain>
+    </PageShell>
   );
 }
 

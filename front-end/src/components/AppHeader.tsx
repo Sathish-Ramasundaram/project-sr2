@@ -4,15 +4,12 @@ type AppHeaderProps = {
   left: ReactNode;
   right?: ReactNode;
   containerClassName?: string;
-  compact?: boolean;
 };
 
-function AppHeader({ left, right, containerClassName = "w-full", compact = true }: AppHeaderProps) {
-  const verticalPaddingClass = compact ? "py-2" : "py-4";
-
+function AppHeader({ left, right, containerClassName = "w-full" }: AppHeaderProps) {
   return (
-    <header className="border-b border-slate-300 bg-white transition-colors dark:border-slate-700 dark:bg-slate-800">
-      <div className={`flex items-center justify-between px-6 ${verticalPaddingClass} ${containerClassName}`}>
+    <header className="h-14 border-b border-slate-300 bg-white transition-colors dark:border-slate-700 dark:bg-slate-800">
+      <div className={`flex h-full items-center justify-between px-6 ${containerClassName}`}>
         {left}
         {right ? right : <div />}
       </div>

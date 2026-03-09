@@ -397,7 +397,7 @@ export async function createProduct(input: {
     displayOrder: nextDisplayOrder,
     category: "Essentials",
     sku,
-    unit: "1 unit",
+    unit: "",
     price: 0,
     description: input.description?.trim() || null,
     imageUrl: input.imageUrl?.trim() || null

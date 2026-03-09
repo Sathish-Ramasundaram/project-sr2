@@ -23,6 +23,8 @@ export function useCheckoutFlow() {
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(0);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponInfo, setCouponInfo] = useState<string | null>(null);
   const deliveryAddressRef = useRef<HTMLElement | null>(null);
   const paymentConfirmationRef = useRef<HTMLElement | null>(null);
 
@@ -34,17 +36,19 @@ export function useCheckoutFlow() {
   };
 
   const applyCoupon = useCallback(
-    async (cartTotal: number, cartId: string) => {
+    async (_cartTotal: number, customerId: string) => {
       if (!couponCode.trim()) {
-        setCheckoutError('Please enter a coupon code');
+        setCouponError('Please enter a coupon code');
+        setCouponInfo(null);
         return false;
       }
 
       try {
-        setCheckoutError(null);
+        setCouponError(null);
+        setCouponInfo(null);
         const result = (await graphqlRequest(APPLY_COUPON, {
           input: {
-            cart_id: cartId,
+            customer_id: customerId,
             coupon_code: couponCode,
           },
         })) as {
@@ -58,16 +62,23 @@ export function useCheckoutFlow() {
 
         if (result.apply_coupon.success) {
           setAppliedDiscount(result.apply_coupon.discount_amount);
-          setCheckoutInfo(
-            `Coupon applied! Discount: ₹${result.apply_coupon.discount_amount}`
+          setCouponInfo(
+            `Coupon applied. You saved \u20B9${result.apply_coupon.discount_amount}.`
           );
           return true;
-        } else {
-          setCheckoutError(result.apply_coupon.message || 'Invalid coupon');
-          return false;
         }
+
+        setAppliedDiscount(0);
+        setCouponError('Coupon not valid.');
+        return false;
       } catch (error) {
-        setCheckoutError(formatBackendError(error, 'coupon application'));
+        setAppliedDiscount(0);
+        const message = formatBackendError(error, 'coupon application');
+        if (message.toLowerCase().includes('invalid coupon')) {
+          setCouponError('Coupon not valid.');
+        } else {
+          setCouponError(message);
+        }
         return false;
       }
     },
@@ -78,7 +89,7 @@ export function useCheckoutFlow() {
     async (cartItems: CartItemResponse[]) => {
       if (!user?.id) {
         setCheckoutError('Customer not found for checkout.');
-        return;
+        return false;
       }
 
       try {
@@ -126,9 +137,15 @@ export function useCheckoutFlow() {
         setShowPaymentStep(false);
         setIsCheckoutOpen(false);
         setAddress(initialAddress);
+        setCouponCode('');
+        setAppliedDiscount(0);
+        setCouponError(null);
+        setCouponInfo(null);
         dispatch(loadCartCountRequest({ customerId: user.id }));
+        return true;
       } catch (error) {
         setCheckoutError(formatBackendError(error, 'checkout'));
+        return false;
       } finally {
         setIsPlacingOrder(false);
       }
@@ -144,6 +161,8 @@ export function useCheckoutFlow() {
     setCheckoutInfo(null);
     setCouponCode('');
     setAppliedDiscount(0);
+    setCouponError(null);
+    setCouponInfo(null);
   };
 
   return {
@@ -161,6 +180,8 @@ export function useCheckoutFlow() {
     couponCode,
     setCouponCode,
     appliedDiscount,
+    couponError,
+    couponInfo,
     deliveryAddressRef,
     paymentConfirmationRef,
     handleAddressSubmit,

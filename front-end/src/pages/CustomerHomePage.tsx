@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from '@/components/AppHeader';
+import PageMain from '@/components/PageMain';
 import ProductGrid from '@/components/customer-home/ProductGrid';
 import StoreLogo from '@/components/StoreLogo';
 import ThemeToggleButton from '@/components/ThemeToggleButton';
@@ -148,6 +149,13 @@ function CustomerHomePage() {
               >
                 Cart: {cartCount}
               </button>
+              <button
+                type="button"
+                onClick={() => navigate('/customer/orders')}
+                className="rounded-md bg-slate-200 px-2 py-1 text-xs font-medium hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600"
+              >
+                Orders
+              </button>
               <ThemeToggleButton />
               <button
                 type="button"
@@ -161,7 +169,7 @@ function CustomerHomePage() {
         />
       </div>
 
-      <main className="h-[calc(100vh-65px)] overflow-y-auto w-full px-6 py-8">
+      <PageMain className="h-[calc(100vh-56px)] overflow-y-auto">
         <div className="mb-5 flex items-center justify-between">
           <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
             {greeting}, {customerName}
@@ -191,7 +199,7 @@ function CustomerHomePage() {
             onRemoveFromCart={handleRemoveFromCart}
           />
         )}
-      </main>
+      </PageMain>
     </div>
   );
 }

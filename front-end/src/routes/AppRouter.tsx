@@ -1,20 +1,39 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
-import AdminProtectedRoute from "@/routes/AdminProtectedRoute";
-import ProtectedRoute from "@/routes/ProtectedRoute";
+
+import AdminProtectedRoute from '@/routes/AdminProtectedRoute';
+import ProtectedRoute from '@/routes/ProtectedRoute';
 
 const HomePage = lazy(() => import('@/pages/HomePage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
-const CataloguePage = lazy(() => import("@/pages/CataloguePage"));
-const FaqPage = lazy(() => import("@/pages/FaqPage"));
-const CustomerLoginPage = lazy(() => import("@/pages/CustomerLoginPage"));
-const CustomerForgotPasswordPage = lazy(() => import("@/pages/CustomerForgotPasswordPage"));
-const CustomerRegisterPage = lazy(() => import("@/pages/CustomerRegisterPage"));
-const CustomerHomePage = lazy(() => import("@/pages/CustomerHomePage"));
-const CustomerCartPage = lazy(() => import("@/pages/CustomerCartPage"));
-const CustomerProductDetailsPage = lazy(() => import("@/pages/CustomerProductDetailsPage"));
-const AdminLoginPage = lazy(() => import("@/pages/AdminLoginPage"));
-const AdminDashboardPage = lazy(() => import("@/pages/AdminDashboardPage"));
+const CataloguePage = lazy(() => import('@/pages/CataloguePage'));
+const FaqPage = lazy(() => import('@/pages/FaqPage'));
+const CustomerLoginPage = lazy(() => import('@/pages/CustomerLoginPage'));
+const CustomerForgotPasswordPage = lazy(
+  () => import('@/pages/CustomerForgotPasswordPage')
+);
+const CustomerRegisterPage = lazy(() => import('@/pages/CustomerRegisterPage'));
+const CustomerHomePage = lazy(() => import('@/pages/CustomerHomePage'));
+const CustomerCartPage = lazy(() => import('@/pages/CustomerCartPage'));
+const CustomerOrderHistoryPage = lazy(
+  () => import('@/pages/CustomerOrderHistoryPage')
+);
+const CustomerOrderTrackPage = lazy(
+  () => import('@/pages/CustomerOrderTrackPage')
+);
+const CustomerProductDetailsPage = lazy(
+  () => import('@/pages/CustomerProductDetailsPage')
+);
+const AdminLoginPage = lazy(() => import('@/pages/AdminLoginPage'));
+const AdminDashboardPage = lazy(() => import('@/pages/AdminDashboardPage'));
+const AdminSalesGraphPage = lazy(() => import('@/pages/AdminSalesGraphPage'));
+const AdminStockAlertsPage = lazy(() => import('@/pages/AdminStockAlertsPage'));
+const AdminProductManagementPage = lazy(
+  () => import('@/pages/AdminProductManagementPage')
+);
+const AdminCustomerDetailsPage = lazy(
+  () => import('@/pages/AdminCustomerDetailsPage')
+);
 
 export function AppRouter() {
   return (
@@ -29,7 +48,6 @@ export function AppRouter() {
         <Routes>
           <Route path="/" element={<HomePage />} />
 
-
           <Route path="/catalogue" element={<CataloguePage />} />
           <Route path="/faq" element={<FaqPage />} />
           <Route path="/customer/login" element={<CustomerLoginPage />} />
@@ -42,6 +60,14 @@ export function AppRouter() {
             <Route path="/customer/home" element={<CustomerHomePage />} />
             <Route path="/customer/cart" element={<CustomerCartPage />} />
             <Route
+              path="/customer/orders"
+              element={<CustomerOrderHistoryPage />}
+            />
+            <Route
+              path="/customer/orders/:orderId/track"
+              element={<CustomerOrderTrackPage />}
+            />
+            <Route
               path="/customer/product/:productId"
               element={<CustomerProductDetailsPage />}
             />
@@ -49,6 +75,23 @@ export function AppRouter() {
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route element={<AdminProtectedRoute />}>
             <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+            <Route path="/admin/sales-graph" element={<AdminSalesGraphPage />} />
+            <Route
+              path="/admin/stock-alerts"
+              element={<AdminStockAlertsPage />}
+            />
+            <Route
+              path="/admin/product-management"
+              element={<AdminProductManagementPage />}
+            />
+            <Route
+              path="/admin/inventory"
+              element={<AdminProductManagementPage />}
+            />
+            <Route
+              path="/admin/customer-details"
+              element={<AdminCustomerDetailsPage />}
+            />
           </Route>
 
           <Route path="*" element={<NotFoundPage />} />

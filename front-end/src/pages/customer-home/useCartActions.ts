@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { graphqlRequest } from '@/api/graphqlClient';
 import {
   DELETE_CART_ITEM,
@@ -33,47 +33,45 @@ export function useCartActions(userId: string | undefined) {
   const [inlineCartFeedback, setInlineCartFeedback] =
     useState<InlineCartFeedback>(null);
 
-  useEffect(() => {
-    const loadMyCartProducts = async () => {
-      if (!userId) {
-        setCartByProductId({});
-        return;
-      }
+  const loadMyCartProducts = useCallback(async () => {
+    if (!userId) {
+      setCartByProductId({});
+      return;
+    }
 
-      try {
-        const data = await graphqlRequest<{
-          cart_items: Array<{
-            id: string;
-            customer_id: string;
-            quantity: number;
-            product: { id: string; is_active: boolean } | null;
-          }>;
-        }>(GET_MY_CART);
-        const map: CartByProductId = {};
-        data.cart_items
-          .filter(
-            (item) => item.customer_id === userId && item.product?.is_active
-          )
-          .forEach((item) => {
-            if (!item.product) return;
-            const existing = map[item.product.id];
-            if (existing) {
-              existing.quantity += item.quantity;
-            } else {
-              map[item.product.id] = {
-                cartItemId: item.id,
-                quantity: item.quantity,
-              };
-            }
-          });
-        setCartByProductId(map);
-      } catch {
-        setCartByProductId({});
-      }
-    };
-
-    void loadMyCartProducts();
+    try {
+      const data = await graphqlRequest<{
+        cart_items: Array<{
+          id: string;
+          customer_id: string;
+          quantity: number;
+          product: { id: string; is_active: boolean } | null;
+        }>;
+      }>(GET_MY_CART);
+      const map: CartByProductId = {};
+      data.cart_items
+        .filter((item) => item.customer_id === userId && item.product?.is_active)
+        .forEach((item) => {
+          if (!item.product) return;
+          const existing = map[item.product.id];
+          if (existing) {
+            existing.quantity += item.quantity;
+          } else {
+            map[item.product.id] = {
+              cartItemId: item.id,
+              quantity: item.quantity,
+            };
+          }
+        });
+      setCartByProductId(map);
+    } catch {
+      setCartByProductId({});
+    }
   }, [userId]);
+
+  useEffect(() => {
+    void loadMyCartProducts();
+  }, [loadMyCartProducts]);
 
   const handleAddToCart = async (productId: string, stock: number) => {
     const liveStock = stock;
@@ -120,6 +118,7 @@ export function useCartActions(userId: string | undefined) {
       }
 
       dispatch(loadCartCountRequest({ customerId: userId }));
+      await loadMyCartProducts();
     } catch (error) {
       const message = formatBackendError(error, 'cart update');
       if (message.toLowerCase().includes('out of stock')) {
@@ -129,6 +128,7 @@ export function useCartActions(userId: string | undefined) {
           tone: 'error',
         });
       }
+      await loadMyCartProducts();
     } finally {
       setCartLoadingProductId(null);
     }
@@ -154,6 +154,9 @@ export function useCartActions(userId: string | undefined) {
         });
       }
       dispatch(loadCartCountRequest({ customerId: userId }));
+      await loadMyCartProducts();
+    } catch {
+      await loadMyCartProducts();
     } finally {
       setCartLoadingProductId(null);
     }
@@ -171,6 +174,9 @@ export function useCartActions(userId: string | undefined) {
         cartItemId: existing.cartItemId,
       });
       dispatch(loadCartCountRequest({ customerId: userId }));
+      await loadMyCartProducts();
+    } catch {
+      await loadMyCartProducts();
     } finally {
       setCartLoadingProductId(null);
     }

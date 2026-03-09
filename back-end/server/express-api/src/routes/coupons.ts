@@ -1,4 +1,5 @@
 import express from 'express';
+import { hasuraAdminRequest } from '../lib/hasuraClient';
 
 const router = express.Router();
 
@@ -8,20 +9,57 @@ const coupons = {
   FLAT50: { discount: 50, type: 'fixed' },
 };
 
-router.post('/apply', (req, res) => {
-  try {
-    // Hasura Actions wrap the input in an "input" field
-    const { input } = req.body;
-    const { coupon_code, cart_id } = input?.input || {};
+type CartTotalResponse = {
+  cart_items: Array<{
+    quantity: number;
+    product: {
+      price: number;
+      is_active: boolean;
+    } | null;
+  }>;
+};
 
-    if (!coupon_code || !cart_id) {
+const GET_CART_TOTAL_BY_CUSTOMER = `
+query GetCartTotalByCustomer($customerId: uuid!) {
+  cart_items(where: { customer_id: { _eq: $customerId } }) {
+    quantity
+    product {
+      price
+      is_active
+    }
+  }
+}
+`;
+
+router.post('/apply', async (req, res) => {
+  try {
+    // Hasura Actions send payload as req.body.input
+    const actionInput =
+      typeof req.body?.input?.input === 'object' && req.body.input.input
+        ? req.body.input.input
+        : typeof req.body?.input === 'object' && req.body.input
+          ? req.body.input
+          : req.body;
+    const couponCode =
+      typeof actionInput?.coupon_code === 'string'
+        ? actionInput.coupon_code.trim()
+        : '';
+    // Backward-compatible: if client still sends cart_id, treat it as customer id for now.
+    const customerIdRaw =
+      typeof actionInput?.customer_id === 'string'
+        ? actionInput.customer_id.trim()
+        : typeof actionInput?.cart_id === 'string'
+          ? actionInput.cart_id.trim()
+          : '';
+
+    if (!couponCode || !customerIdRaw) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid input: coupon_code and cart_id required',
+        message: 'Invalid input: coupon_code and customer_id required',
       });
     }
 
-    const coupon = coupons[coupon_code.toUpperCase() as keyof typeof coupons];
+    const coupon = coupons[couponCode.toUpperCase() as keyof typeof coupons];
     if (!coupon) {
       return res.status(400).json({
         success: false,
@@ -29,17 +67,38 @@ router.post('/apply', (req, res) => {
       });
     }
 
-    // For now, use a mock cart total. In production, query from DB using cart_id
-    const cart_total = 100; // Mock value
+    const data = await hasuraAdminRequest<CartTotalResponse>(
+      GET_CART_TOTAL_BY_CUSTOMER,
+      {
+        customerId: customerIdRaw,
+      }
+    );
+    const cartTotal = data.cart_items.reduce((sum, item) => {
+      const isActive = item.product?.is_active ?? false;
+      if (!isActive) {
+        return sum;
+      }
+      const price = Number(item.product?.price ?? 0);
+      const quantity = Number(item.quantity ?? 0);
+      return sum + price * quantity;
+    }, 0);
+
+    if (cartTotal <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cart is empty',
+      });
+    }
+
     let discount_amount = 0;
-    let final_total = cart_total;
+    let final_total = cartTotal;
 
     if (coupon.type === 'percentage') {
-      discount_amount = cart_total * (coupon.discount / 100);
-      final_total = cart_total - discount_amount;
+      discount_amount = cartTotal * (coupon.discount / 100);
+      final_total = cartTotal - discount_amount;
     } else if (coupon.type === 'fixed') {
       discount_amount = coupon.discount;
-      final_total = Math.max(0, cart_total - discount_amount);
+      final_total = Math.max(0, cartTotal - discount_amount);
     }
 
     res.json({

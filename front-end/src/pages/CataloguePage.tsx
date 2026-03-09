@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AppHeader from '@/components/AppHeader';
+import PageMain from '@/components/PageMain';
+import PageShell from '@/components/PageShell';
 import CatalogueTable from '@/components/catalogue/CatalogueTable';
 import Filters from '@/components/catalogue/Filters';
 import StudentTable from '@/components/catalogue/StudentTable';
@@ -54,7 +56,7 @@ function CataloguePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-900 dark:text-slate-100">
+    <PageShell>
       <AppHeader
         left={
           <StoreLogo
@@ -82,7 +84,7 @@ function CataloguePage() {
         }
       />
 
-      <main className="w-full px-6 py-10">
+      <PageMain className="py-10">
         <div className="w-full">
           <h2 className="text-3xl font-extrabold">Grocery Price List</h2>
           <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
@@ -113,8 +115,8 @@ function CataloguePage() {
             studentsError={studentsError}
           />
         </div>
-      </main>
-    </div>
+      </PageMain>
+    </PageShell>
   );
 }
 

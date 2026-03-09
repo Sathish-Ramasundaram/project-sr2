@@ -23,7 +23,7 @@ function HeroSection() {
       </div>
 
       <div className="relative mt-12 overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
-        <div className="flex w-max animate-[home-marquee_60s_linear_infinite]">
+        <div className="home-marquee-track flex w-max">
           {[...heroSlides, ...heroSlides].map((slide, index) => (
             <div
               key={`${slide}-${index}`}

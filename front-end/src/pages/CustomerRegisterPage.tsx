@@ -1,5 +1,7 @@
 import { Link, Navigate } from 'react-router-dom';
 import AppHeader from '@/components/AppHeader';
+import PageMain from '@/components/PageMain';
+import PageShell from '@/components/PageShell';
 import StoreLogo from '@/components/StoreLogo';
 import ThemeToggleButton from '@/components/ThemeToggleButton';
 import RegisterForm from '@/pages/customer/RegisterForm';
@@ -28,7 +30,7 @@ function CustomerRegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 transition-colors dark:bg-slate-900 dark:text-slate-100">
+    <PageShell>
       <AppHeader
         left={
           <StoreLogo
@@ -40,7 +42,7 @@ function CustomerRegisterPage() {
         right={<ThemeToggleButton />}
       />
 
-      <main className="px-6 py-10">
+      <PageMain className="py-10">
         <RegisterForm
           name={name}
           email={email}
@@ -55,8 +57,8 @@ function CustomerRegisterPage() {
           onConfirmPasswordChange={setConfirmPassword}
           onSubmit={handleSubmit}
         />
-      </main>
-    </div>
+      </PageMain>
+    </PageShell>
   );
 }
 
