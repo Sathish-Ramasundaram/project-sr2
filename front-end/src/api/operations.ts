@@ -205,3 +205,49 @@ query TrackOrder($orderId: ID!) {
   }
 }
 `;
+
+export const GET_UNREAD_NOTIFICATIONS_COUNT = `
+query GetUnreadNotificationsCount($customerId: uuid!) {
+  notifications_aggregate(
+    where: {
+      customer_id: { _eq: $customerId }
+      is_read: { _eq: false }
+    }
+  ) {
+    aggregate {
+      count
+    }
+  }
+}
+`;
+
+export const GET_CUSTOMER_NOTIFICATIONS = `
+query GetCustomerNotifications($customerId: uuid!) {
+  notifications(
+    where: { customer_id: { _eq: $customerId } }
+    order_by: [{ created_at: desc }]
+  ) {
+    id
+    customer_id
+    order_id
+    title
+    message
+    is_read
+    created_at
+  }
+}
+`;
+
+export const MARK_NOTIFICATION_AS_READ = `
+mutation MarkNotificationAsRead($notificationId: uuid!, $customerId: uuid!) {
+  update_notifications(
+    where: {
+      id: { _eq: $notificationId }
+      customer_id: { _eq: $customerId }
+    }
+    _set: { is_read: true }
+  ) {
+    affected_rows
+  }
+}
+`;

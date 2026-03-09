@@ -6,13 +6,18 @@
     "scripts": {
         "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
         "build": "tsc",
-        "start": "node dist/app.js"
+        "start": "node dist/app.js",
+        "temporal:worker": "ts-node-dev --respawn --transpile-only src/temporal/worker.ts"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "type": "commonjs",
     "dependencies": {
+        "@temporalio/activity": "^1.15.0",
+        "@temporalio/client": "^1.15.0",
+        "@temporalio/worker": "^1.15.0",
+        "@temporalio/workflow": "^1.15.0",
         "bcryptjs": "^3.0.3",
         "dotenv": "^17.3.1",
         "express": "^5.2.1",

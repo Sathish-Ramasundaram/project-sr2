@@ -1,23 +1,11 @@
 import { Request, Response } from "express";
-import {
-  calculateTotalAmount,
-  clearCustomerCart,
-  createPendingOrder,
-  createSuccessfulPayment,
-  decrementInventoryFromCart,
-  insertOrderItems,
-  loadCartForCheckout,
-  setOrderStatus,
-  validateCartForCheckout
-} from "./checkoutService";
+import { WorkflowFailedError, WorkflowNotFoundError } from "@temporalio/client";
 import { toCheckoutAddress } from "./checkoutValidation";
+import { getTemporalClient } from "../../temporal/client";
+import type { CheckoutInput } from "../../temporal/activities/checkoutActivities";
+import type { CheckoutWorkflowResult } from "../../temporal/workflows/checkoutWorkflow";
 
-type PlaceOrderResponse = {
-  orderId: string;
-  totalAmount: number;
-  paymentStatus: "success";
-  message: string;
-};
+const TEMPORAL_TASK_QUEUE = process.env.TEMPORAL_TASK_QUEUE ?? "checkout-task-queue";
 
 export async function placeOrderHandler(req: Request, res: Response) {
   const customerId =
@@ -31,43 +19,77 @@ export async function placeOrderHandler(req: Request, res: Response) {
     return;
   }
 
-  let orderId: string | null = null;
+  try {
+    const client = await getTemporalClient();
+    const workflowId = `checkout-${customerId}-${Date.now()}`;
+    const input: CheckoutInput = { customerId, address };
+
+    const handle = await client.workflow.start("checkoutWorkflow", {
+      taskQueue: TEMPORAL_TASK_QUEUE,
+      workflowId,
+      args: [input]
+    });
+
+    res.status(202).json({
+      message: "Checkout accepted. Payment is being processed.",
+      workflowId: handle.workflowId,
+      runId: handle.firstExecutionRunId,
+      status: "RUNNING"
+    });
+  } catch (error) {
+    res.status(500).json({
+      message:
+        error instanceof Error ? error.message : "Failed to start checkout workflow."
+    });
+  }
+}
+
+export async function getCheckoutStatusHandler(req: Request, res: Response) {
+  const workflowIdParam = (req.params as { workflowId?: string | string[] }).workflowId;
+  const workflowId =
+    typeof workflowIdParam === "string" ? workflowIdParam.trim() : "";
+
+  if (!workflowId) {
+    res.status(400).json({ message: "workflowId is required." });
+    return;
+  }
 
   try {
-    const cartData = await loadCartForCheckout(customerId);
+    const client = await getTemporalClient();
+    const handle = client.workflow.getHandle(workflowId);
+    const result = (await Promise.race([
+      handle.result(),
+      new Promise<never>((_resolve, reject) => {
+        setTimeout(() => reject(new Error("WORKFLOW_RUNNING")), 250);
+      })
+    ])) as CheckoutWorkflowResult;
 
-    const validation = validateCartForCheckout(cartData.cart_items);
-    if (!validation.ok) {
-      res.status(validation.status).json({ message: validation.message });
+    res.status(200).json({
+      status: "COMPLETED",
+      result
+    });
+  } catch (error) {
+    if (error instanceof WorkflowNotFoundError) {
+      res.status(404).json({ status: "NOT_FOUND", message: "Workflow not found." });
       return;
     }
 
-    const totalAmount = calculateTotalAmount(cartData.cart_items);
-    orderId = await createPendingOrder(customerId, totalAmount);
-    await insertOrderItems(orderId, cartData.cart_items);
-    await createSuccessfulPayment(orderId, totalAmount);
-    await setOrderStatus(orderId, "paid");
-    await decrementInventoryFromCart(cartData.cart_items);
-    await clearCustomerCart(customerId);
+    if (error instanceof WorkflowFailedError) {
+      res.status(200).json({
+        status: "FAILED",
+        message: error.message
+      });
+      return;
+    }
 
-    const responseBody: PlaceOrderResponse = {
-      orderId,
-      totalAmount,
-      paymentStatus: "success",
-      message: "Order placed successfully."
-    };
-    res.status(201).json(responseBody);
-  } catch (error) {
-    if (orderId) {
-      try {
-        await setOrderStatus(orderId, "payment_failed");
-      } catch {
-        // Keep original failure response.
-      }
+    if (error instanceof Error && error.message === "WORKFLOW_RUNNING") {
+      res.status(200).json({ status: "RUNNING" });
+      return;
     }
 
     res.status(500).json({
-      message: error instanceof Error ? error.message : "Checkout failed."
+      status: "ERROR",
+      message: error instanceof Error ? error.message : "Failed to get checkout status."
     });
   }
 }

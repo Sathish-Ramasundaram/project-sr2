@@ -1,4 +1,4 @@
-import { FormEvent, useState, useRef, useCallback } from 'react';
+import { FormEvent, useState, useRef, useCallback, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { formatBackendError } from '@/utils/apiError';
 import { orderPaid } from '@/store/inventory/inventorySlice';
@@ -7,10 +7,23 @@ import { graphqlRequest } from '@/api/graphqlClient';
 import { APPLY_COUPON } from '@/api/operations';
 import type {
   CartItemResponse,
+  CheckoutStatusResponse,
   CheckoutAddress,
+  PaymentDetails,
   PlaceOrderResponse,
+  StartCheckoutResponse,
 } from '@/pages/customer-cart/types';
 import { initialAddress } from '@/pages/customer-cart/types';
+
+const CHECKOUT_STORAGE_KEY = 'checkout_in_progress';
+const CHECKOUT_MAX_WAIT_MS = 3 * 60 * 1000;
+const CHECKOUT_MAX_TRANSIENT_FAILURES = 15;
+
+type StoredCheckoutProgress = {
+  workflowId: string;
+  customerId: string;
+  startedAt: number;
+};
 
 export function useCheckoutFlow() {
   const dispatch = useAppDispatch();
@@ -27,6 +40,170 @@ export function useCheckoutFlow() {
   const [couponInfo, setCouponInfo] = useState<string | null>(null);
   const deliveryAddressRef = useRef<HTMLElement | null>(null);
   const paymentConfirmationRef = useRef<HTMLElement | null>(null);
+  const isResumePollingActiveRef = useRef(false);
+  const wait = (ms: number) =>
+    new Promise<void>((resolve) => {
+      window.setTimeout(resolve, ms);
+    });
+
+  const saveCheckoutProgress = (progress: StoredCheckoutProgress) => {
+    try {
+      window.localStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify(progress));
+    } catch {
+      // localStorage can fail in private mode; continue without persistence.
+    }
+  };
+
+  const loadCheckoutProgress = (): StoredCheckoutProgress | null => {
+    try {
+      const raw = window.localStorage.getItem(CHECKOUT_STORAGE_KEY);
+      if (!raw) {
+        return null;
+      }
+      const parsed = JSON.parse(raw) as Partial<StoredCheckoutProgress>;
+      if (
+        typeof parsed.workflowId === 'string' &&
+        typeof parsed.customerId === 'string' &&
+        typeof parsed.startedAt === 'number'
+      ) {
+        return {
+          workflowId: parsed.workflowId,
+          customerId: parsed.customerId,
+          startedAt: parsed.startedAt,
+        };
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  const clearCheckoutProgress = () => {
+    try {
+      window.localStorage.removeItem(CHECKOUT_STORAGE_KEY);
+    } catch {
+      // Ignore storage cleanup failure.
+    }
+  };
+
+  const finalizeCheckoutSuccess = useCallback(
+    (result: PlaceOrderResponse, cartItems: CartItemResponse[]) => {
+      const purchasedItems = cartItems
+        .filter((item) => item.product?.id)
+        .map((item) => ({
+          productId: item.product!.id,
+          quantity: item.quantity,
+        }));
+
+      if (purchasedItems.length > 0) {
+        dispatch(orderPaid(purchasedItems));
+      }
+      setCheckoutInfo(
+        `${result.message} Order ID: ${result.orderId}. Payment: ${result.paymentStatus}.`
+      );
+      setShowPaymentStep(false);
+      setIsCheckoutOpen(false);
+      setAddress(initialAddress);
+      setCouponCode('');
+      setAppliedDiscount(0);
+      setCouponError(null);
+      setCouponInfo(null);
+      if (user?.id) {
+        dispatch(loadCartCountRequest({ customerId: user.id }));
+      }
+      window.dispatchEvent(new Event('notifications-updated'));
+      window.setTimeout(() => {
+        window.dispatchEvent(new Event('notifications-updated'));
+      }, 4000);
+    },
+    [dispatch, user?.id]
+  );
+
+  const pollCheckoutStatus = useCallback(
+    async (workflowId: string, cartItems: CartItemResponse[]) => {
+      const pollStartedAt = Date.now();
+      let transientFailureCount = 0;
+
+      while (Date.now() - pollStartedAt < CHECKOUT_MAX_WAIT_MS) {
+        await wait(1000);
+
+        let statusResponse: Response;
+        try {
+          statusResponse = await fetch(
+            `http://localhost:5000/api/checkout/status/${workflowId}`
+          );
+        } catch {
+          transientFailureCount += 1;
+          if (transientFailureCount >= CHECKOUT_MAX_TRANSIENT_FAILURES) {
+            throw new Error('Checkout status is temporarily unreachable.');
+          }
+          await wait(Math.min(5000, transientFailureCount * 500));
+          continue;
+        }
+
+        let statusBody: CheckoutStatusResponse | { message?: string };
+        try {
+          statusBody = (await statusResponse.json()) as
+            | CheckoutStatusResponse
+            | { message?: string };
+        } catch {
+          transientFailureCount += 1;
+          if (transientFailureCount >= CHECKOUT_MAX_TRANSIENT_FAILURES) {
+            throw new Error('Checkout status response is invalid.');
+          }
+          continue;
+        }
+
+        if (!statusResponse.ok) {
+          if (statusResponse.status >= 500) {
+            transientFailureCount += 1;
+            if (transientFailureCount >= CHECKOUT_MAX_TRANSIENT_FAILURES) {
+              throw new Error('Checkout status is unavailable. Please try again.');
+            }
+            await wait(Math.min(5000, transientFailureCount * 500));
+            continue;
+          }
+
+          throw new Error(
+            'message' in statusBody && statusBody.message
+              ? statusBody.message
+              : 'Failed to fetch checkout status.'
+          );
+        }
+
+        transientFailureCount = 0;
+
+        if ('status' in statusBody && statusBody.status === 'RUNNING') {
+          continue;
+        }
+
+        if ('status' in statusBody && statusBody.status === 'COMPLETED') {
+          finalizeCheckoutSuccess(statusBody.result, cartItems);
+          clearCheckoutProgress();
+          return;
+        }
+
+        if ('status' in statusBody && statusBody.status === 'FAILED') {
+          clearCheckoutProgress();
+          throw new Error(statusBody.message ?? 'Payment failed.');
+        }
+
+        if (
+          'status' in statusBody &&
+          (statusBody.status === 'NOT_FOUND' || statusBody.status === 'ERROR')
+        ) {
+          transientFailureCount += 1;
+          if (transientFailureCount >= CHECKOUT_MAX_TRANSIENT_FAILURES) {
+            clearCheckoutProgress();
+            throw new Error(statusBody.message ?? 'Unable to fetch checkout status.');
+          }
+        }
+      }
+
+      throw new Error('Payment is taking too long. Please check order status and retry.');
+    },
+    [finalizeCheckoutSuccess]
+  );
 
   const handleAddressSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -86,7 +263,7 @@ export function useCheckoutFlow() {
   );
 
   const handlePlaceOrder = useCallback(
-    async (cartItems: CartItemResponse[]) => {
+    async (cartItems: CartItemResponse[], _paymentDetails: PaymentDetails) => {
       if (!user?.id) {
         setCheckoutError('Customer not found for checkout.');
         return false;
@@ -112,7 +289,7 @@ export function useCheckoutFlow() {
         );
 
         const responseBody = (await response.json()) as
-          | PlaceOrderResponse
+          | StartCheckoutResponse
           | { message?: string };
         if (!response.ok) {
           throw new Error(
@@ -122,26 +299,13 @@ export function useCheckoutFlow() {
           );
         }
 
-        const result = responseBody as PlaceOrderResponse;
-        const purchasedItems = cartItems
-          .filter((item) => item.product?.id)
-          .map((item) => ({
-            productId: item.product!.id,
-            quantity: item.quantity,
-          }));
-
-        dispatch(orderPaid(purchasedItems));
-        setCheckoutInfo(
-          `${result.message} Order ID: ${result.orderId}. Payment: ${result.paymentStatus}.`
-        );
-        setShowPaymentStep(false);
-        setIsCheckoutOpen(false);
-        setAddress(initialAddress);
-        setCouponCode('');
-        setAppliedDiscount(0);
-        setCouponError(null);
-        setCouponInfo(null);
-        dispatch(loadCartCountRequest({ customerId: user.id }));
+        const startResponse = responseBody as StartCheckoutResponse;
+        saveCheckoutProgress({
+          workflowId: startResponse.workflowId,
+          customerId: user.id,
+          startedAt: Date.now(),
+        });
+        await pollCheckoutStatus(startResponse.workflowId, cartItems);
         return true;
       } catch (error) {
         setCheckoutError(formatBackendError(error, 'checkout'));
@@ -150,8 +314,34 @@ export function useCheckoutFlow() {
         setIsPlacingOrder(false);
       }
     },
-    [user?.id, address, dispatch]
+    [user?.id, address, pollCheckoutStatus]
   );
+
+  useEffect(() => {
+    if (!user?.id || isResumePollingActiveRef.current) {
+      return;
+    }
+
+    const progress = loadCheckoutProgress();
+    if (!progress || progress.customerId !== user.id) {
+      return;
+    }
+
+    isResumePollingActiveRef.current = true;
+    setIsPlacingOrder(true);
+    setCheckoutError(null);
+    setCheckoutInfo('Resuming payment status...');
+    setShowPaymentStep(true);
+
+    void pollCheckoutStatus(progress.workflowId, [])
+      .catch((error) => {
+        setCheckoutError(formatBackendError(error, 'checkout'));
+      })
+      .finally(() => {
+        setIsPlacingOrder(false);
+        isResumePollingActiveRef.current = false;
+      });
+  }, [pollCheckoutStatus, user?.id]);
 
   const resetCheckout = () => {
     setIsCheckoutOpen(false);

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import AppHeader from '@/components/AppHeader';
+import NotificationBellButton from '@/components/customer/NotificationBellButton';
 import PageMain from '@/components/PageMain';
 import PageShell from '@/components/PageShell';
 import StoreLogo from '@/components/StoreLogo';
@@ -122,6 +123,7 @@ function CustomerOrderTrackPage() {
             >
               Cart: {cartCount}
             </button>
+            <NotificationBellButton customerId={user?.id} />
             <ThemeToggleButton />
             <button
               type="button"

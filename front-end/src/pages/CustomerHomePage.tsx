@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from '@/components/AppHeader';
+import NotificationBellButton from '@/components/customer/NotificationBellButton';
 import PageMain from '@/components/PageMain';
 import ProductGrid from '@/components/customer-home/ProductGrid';
 import StoreLogo from '@/components/StoreLogo';
@@ -156,6 +157,7 @@ function CustomerHomePage() {
               >
                 Orders
               </button>
+              <NotificationBellButton customerId={user?.id} />
               <ThemeToggleButton />
               <button
                 type="button"

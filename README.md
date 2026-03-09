@@ -5,14 +5,45 @@ Full-stack grocery store learning project.
 ## Tech Stack
 
 - Frontend: React + TypeScript + Redux Toolkit + Redux Saga + Tailwind + Rspack
-- Backend API: Express + TypeScript
-- Data/API layer: Hasura GraphQL + PostgreSQL (Docker)
+- Backend API: Express + TypeScript + GraphQL Yoga
+- Data layer: Hasura GraphQL + PostgreSQL (Docker)
+- Workflow orchestration: Temporal (checkout workflow + worker)
 
-## Repository Structure
+## Current Project Structure
 
-- `front-end/` - customer and admin UI
-- `back-end/server/express-api/` - Express API (auth, catalogue, admin product management, checkout)
-- `back-end/hasura/` - PostgreSQL + Hasura Docker compose
+```text
+project-sr2/
+|- front-end/
+|  |- src/
+|  |  |- components/
+|  |  |- pages/
+|  |  |- routes/
+|  |  |- store/
+|  |  |- api/
+|  |  |- utils/
+|  |- cypress/
+|  |- .storybook/
+|  |- public/
+|  |- rspack.config.js
+|  |- package.json
+|- back-end/
+|  |- hasura/
+|  |  |- docker-compose.yml
+|  |- server/
+|  |  |- express-api/
+|  |  |  |- src/
+|  |  |  |  |- routes/
+|  |  |  |  |- modules/
+|  |  |  |  |- middleware/
+|  |  |  |  |- graphql/
+|  |  |  |  |- lib/
+|  |  |  |  |- temporal/
+|  |  |  |  |  |- activities/
+|  |  |  |  |  |- workflows/
+|  |  |  |  |- app.ts
+|  |  |  |- package.json
+|- README.md
+```
 
 ## Implemented Features
 
@@ -20,12 +51,7 @@ Full-stack grocery store learning project.
 - Customer home and catalogue powered by backend/Hasura product data
 - Product details page
 - Cart flow with quantity controls (`+/-/remove`)
-- Checkout flow:
-  - create order
-  - create order_items
-  - create payment (demo success)
-  - update order status
-  - clear cart
+- Checkout flow (order, order items, payment, inventory update, cart clear)
 - Stock-aware add-to-cart and out-of-stock UI
 - Admin dashboard:
   - add product
@@ -33,6 +59,12 @@ Full-stack grocery store learning project.
   - stock alerts
   - sales graph (date range / last 30 days)
 - Cross-tab refresh signal for catalogue/customer pages on admin updates
+
+## Temporal Status
+
+- Temporal checkout workflow is integrated in backend (`src/temporal/`).
+- Worker entry is available via `npm run temporal:worker`.
+- Event trigger integration is work in progress.
 
 ## Prerequisites
 
@@ -52,6 +84,9 @@ HASURA_GRAPHQL_URL=http://localhost:8080/v1/graphql
 HASURA_ADMIN_SECRET=admin123
 HASURA_JWT_DEFAULT_ROLE=customer
 HASURA_JWT_ALLOWED_ROLES=customer,admin
+TEMPORAL_ADDRESS=localhost:7233
+TEMPORAL_NAMESPACE=default
+TEMPORAL_TASK_QUEUE=checkout-task-queue
 ```
 
 Important:
@@ -60,14 +95,15 @@ Important:
 
 ## Run Locally
 
-### 1) Start PostgreSQL + Hasura
+### 1) Start infrastructure (PostgreSQL + Hasura + Temporal)
 
 ```powershell
 cd back-end\hasura
 docker compose up -d
 ```
 
-Hasura console: `http://localhost:8080/console`
+- Hasura console: `http://localhost:8080/console`
+- Temporal UI: `http://localhost:8088`
 
 ### 2) Start Express API
 
@@ -79,7 +115,14 @@ npm run dev
 
 API base URL: `http://localhost:5000`
 
-### 3) Start Frontend
+### 3) Start Temporal worker
+
+```powershell
+cd back-end\server\express-api
+npm run temporal:worker
+```
+
+### 4) Start Frontend
 
 ```powershell
 cd front-end
@@ -87,7 +130,7 @@ npm install
 npm run dev
 ```
 
-Frontend URL: check terminal output (commonly `http://localhost:3000` or configured port)
+Frontend URL: check terminal output.
 
 ## Key API Routes
 
@@ -110,6 +153,7 @@ Frontend URL: check terminal output (commonly `http://localhost:3000` or configu
   - `PATCH /api/admin/products/:productId/stock`
 - Checkout:
   - `POST /api/checkout/place-order`
+  - `GET /api/checkout/status/:workflowId`
 
 ## Database Notes
 
@@ -121,17 +165,9 @@ ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS display_order integer NOT NULL DEFAULT 9999;
 ```
 
-## Hasura Permission Checklist (customer role)
-
-- `products`: select active products
-- `cart_items`: row filter `customer_id = X-Hasura-User-Id`
-- `cart_items` select permission has `Allow Aggregations` enabled
-
-If missing, cart count queries can fail (`cart_items_aggregate` errors).
-
 ## Useful Commands
 
-### Restart Hasura stack
+### Restart infrastructure
 
 ```powershell
 cd back-end\hasura

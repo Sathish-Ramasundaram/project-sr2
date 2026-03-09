@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AppHeader from '@/components/AppHeader';
+import NotificationBellButton from '@/components/customer/NotificationBellButton';
 import PageMain from '@/components/PageMain';
 import PageShell from '@/components/PageShell';
 import CartItemsList from '@/components/customer-cart/CartItemsList';
@@ -13,6 +14,7 @@ import { loadCartCountRequest } from '@/store/cart/cartSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { useCartData } from '@/pages/customer-cart/useCartData';
 import { useCheckoutFlow } from '@/pages/customer-cart/useCheckoutFlow';
+import type { PaymentDetails } from '@/pages/customer-cart/types';
 
 function CustomerCartPage() {
   const dispatch = useAppDispatch();
@@ -96,8 +98,8 @@ function CustomerCartPage() {
     navigate('/');
   };
 
-  const handlePlaceOrderWithCallback = async () => {
-    const isSuccess = await placeOrder(cartItems);
+  const handlePlaceOrderWithCallback = async (paymentDetails: PaymentDetails) => {
+    const isSuccess = await placeOrder(cartItems, paymentDetails);
     if (isSuccess) {
       await refreshCartItems();
     }
@@ -131,6 +133,7 @@ function CustomerCartPage() {
             >
               Orders
             </button>
+            <NotificationBellButton customerId={user?.id} />
             <ThemeToggleButton />
             <button
               type="button"

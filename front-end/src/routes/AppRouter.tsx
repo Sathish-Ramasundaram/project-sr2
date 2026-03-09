@@ -18,6 +18,9 @@ const CustomerCartPage = lazy(() => import('@/pages/CustomerCartPage'));
 const CustomerOrderHistoryPage = lazy(
   () => import('@/pages/CustomerOrderHistoryPage')
 );
+const CustomerNotificationsPage = lazy(
+  () => import('@/pages/CustomerNotificationsPage')
+);
 const CustomerOrderTrackPage = lazy(
   () => import('@/pages/CustomerOrderTrackPage')
 );
@@ -62,6 +65,10 @@ export function AppRouter() {
             <Route
               path="/customer/orders"
               element={<CustomerOrderHistoryPage />}
+            />
+            <Route
+              path="/customer/notifications"
+              element={<CustomerNotificationsPage />}
             />
             <Route
               path="/customer/orders/:orderId/track"
