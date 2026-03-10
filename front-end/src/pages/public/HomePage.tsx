@@ -1,38 +1,22 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import AppHeader from '@/components/AppHeader';
-import PageMain from '@/components/PageMain';
-import PageShell from '@/components/PageShell';
-import ThemeToggleButton from '@/components/ThemeToggleButton';
-import HeroSection from '@/components/HeroSection';
-import AboutContactSection from '@/components/AboutContactSection';
-import Footer from '@/components/Footer';
-import LoginChooser from '@/components/LoginChooser';
+import AppHeader from '@/components/layout/AppHeader';
+import PageMain from '@/components/layout/PageMain';
+import PageShell from '@/components/layout/PageShell';
+import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
+import HeroSection from '@/components/public/HeroSection';
+import AboutContactSection from '@/components/public/AboutContactSection';
+import Footer from '@/components/layout/Footer';
+import LoginChooser from '@/components/public/LoginChooser';
 import { useLoginChooser } from './useLoginChooser';
+import './HomePage.css';
 
 function HomePage() {
-  const { isLoginChooserOpen, openLoginChooser, closeLoginChooser } =
-    useLoginChooser();
+
+  const { isLoginChooserOpen, openLoginChooser, closeLoginChooser } = useLoginChooser();
 
   return (
     <PageShell>
-      <style>
-        {`
-          .home-marquee-track {
-            animation: home-marquee 60s linear infinite;
-          }
-
-          @keyframes home-marquee {
-            from {
-              transform: translateX(0);
-            }
-
-            to {
-              transform: translateX(-50%);
-            }
-          }
-        `}
-      </style>
       <AppHeader
         left={<div />}
         right={
@@ -43,6 +27,7 @@ function HomePage() {
             <Link to="/faq" className="hover:underline">
               FAQ
             </Link>
+
             <button
               type="button"
               onClick={openLoginChooser}
@@ -50,17 +35,20 @@ function HomePage() {
             >
               Login
             </button>
+            
             <ThemeToggleButton />
           </nav>
         }
       />
 
-      <PageMain className="flex px-0.5 sm:px-1 md:px-2 pt-12">
+      <PageMain className="flex px-0 pt-12">
         <HeroSection />
       </PageMain>
       <AboutContactSection />
       <Footer />
+
       <LoginChooser isOpen={isLoginChooserOpen} onClose={closeLoginChooser} />
+      
     </PageShell>
   );
 }

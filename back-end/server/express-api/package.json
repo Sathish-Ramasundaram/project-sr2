@@ -7,7 +7,8 @@
         "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
         "build": "tsc",
         "start": "node dist/app.js",
-        "temporal:worker": "ts-node-dev --respawn --transpile-only src/temporal/worker.ts"
+        "temporal:worker": "ts-node-dev --respawn --transpile-only src/temporal/worker.ts",
+        "db:check": "npm run build && node dist/scripts/checkKnexConnection.js"
     },
     "keywords": [],
     "author": "",
@@ -23,6 +24,8 @@
         "express": "^5.2.1",
         "graphql": "^16.13.1",
         "graphql-yoga": "^5.18.1",
+        "knex": "^3.1.0",
+        "pg": "^8.16.3",
         "jsonwebtoken": "^9.0.3"
     },
     "devDependencies": {

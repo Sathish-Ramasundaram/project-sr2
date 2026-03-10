@@ -11,7 +11,9 @@ function LoginChooser({ isOpen, onClose }: LoginChooserProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/55 px-6">
+
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl transition-colors dark:bg-slate-800">
+        
         <div className="mb-6 flex items-start justify-between">
           <h3 className="text-xl font-bold">Choose Login</h3>
           <button

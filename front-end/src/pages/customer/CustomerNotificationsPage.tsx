@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import AppHeader from '@/components/AppHeader';
+import AppHeader from '@/components/layout/AppHeader';
 import NotificationBellButton from '@/components/customer/NotificationBellButton';
-import PageMain from '@/components/PageMain';
-import PageShell from '@/components/PageShell';
-import StoreLogo from '@/components/StoreLogo';
-import ThemeToggleButton from '@/components/ThemeToggleButton';
+import PageMain from '@/components/layout/PageMain';
+import PageShell from '@/components/layout/PageShell';
+import StoreLogo from '@/components/shared/StoreLogo';
+import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
 import { graphqlRequest } from '@/api/graphqlClient';
 import {
   GET_CUSTOMER_NOTIFICATIONS,

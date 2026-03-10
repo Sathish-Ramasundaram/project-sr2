@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import MoonIcon from "@/components/icons/MoonIcon";
-import SunIcon from "@/components/icons/SunIcon";
 
 type Theme = "light" | "dark";
 
@@ -23,16 +21,21 @@ function ThemeToggleButton() {
     const root = document.documentElement;
     root.classList.toggle("dark", isDark);
     localStorage.setItem(THEME_STORAGE_KEY, theme);
-  }, [isDark, theme]);
+  }, [theme]);
 
   return (
     <button
       type="button"
       onClick={() => setTheme((currentTheme) => (currentTheme === "light" ? "dark" : "light"))}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      className="rounded-md p-2 transition-colors hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-500 dark:hover:bg-slate-700 dark:focus:ring-slate-300"
+      className="inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-500 dark:hover:bg-slate-700 dark:focus:ring-slate-300"
     >
-      {isDark ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
+      <span
+        className="inline-flex h-5 w-5 items-center justify-center text-base leading-none text-slate-800 dark:text-white"
+        aria-hidden="true"
+      >
+        {isDark ? "☼" : "◐"}
+      </span>
     </button>
   );
 }

@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { graphqlRequest } from "@/api/graphqlClient";
 import { GET_PRODUCT_BY_ID } from "@/api/operations";
-import AppHeader from "@/components/AppHeader";
-import PageMain from "@/components/PageMain";
-import PageShell from "@/components/PageShell";
-import StoreLogo from "@/components/StoreLogo";
-import ThemeToggleButton from "@/components/ThemeToggleButton";
+import AppHeader from "@/components/layout/AppHeader";
+import PageMain from "@/components/layout/PageMain";
+import PageShell from "@/components/layout/PageShell";
+import StoreLogo from "@/components/shared/StoreLogo";
+import ThemeToggleButton from "@/components/theme/ThemeToggleButton";
 import { formatBackendError } from "@/utils/apiError";
 import type { Product } from "@/types/product";
 

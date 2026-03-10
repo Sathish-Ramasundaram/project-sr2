@@ -4,38 +4,44 @@ import { lazy, Suspense } from 'react';
 import AdminProtectedRoute from '@/routes/AdminProtectedRoute';
 import ProtectedRoute from '@/routes/ProtectedRoute';
 
-const HomePage = lazy(() => import('@/pages/HomePage'));
-const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
-const CataloguePage = lazy(() => import('@/pages/CataloguePage'));
-const FaqPage = lazy(() => import('@/pages/FaqPage'));
-const CustomerLoginPage = lazy(() => import('@/pages/CustomerLoginPage'));
+const HomePage = lazy(() => import('@/pages/public/HomePage'));
+const NotFoundPage = lazy(() => import('@/pages/public/NotFoundPage'));
+const CataloguePage = lazy(() => import('@/pages/public/CataloguePage'));
+const FaqPage = lazy(() => import('@/pages/public/FaqPage'));
+const CustomerLoginPage = lazy(() => import('@/pages/customer/CustomerLoginPage'));
 const CustomerForgotPasswordPage = lazy(
-  () => import('@/pages/CustomerForgotPasswordPage')
+  () => import('@/pages/customer/CustomerForgotPasswordPage')
 );
-const CustomerRegisterPage = lazy(() => import('@/pages/CustomerRegisterPage'));
-const CustomerHomePage = lazy(() => import('@/pages/CustomerHomePage'));
-const CustomerCartPage = lazy(() => import('@/pages/CustomerCartPage'));
+const CustomerRegisterPage = lazy(
+  () => import('@/pages/customer/CustomerRegisterPage')
+);
+const CustomerHomePage = lazy(() => import('@/pages/customer/CustomerHomePage'));
+const CustomerCartPage = lazy(() => import('@/pages/customer/CustomerCartPage'));
 const CustomerOrderHistoryPage = lazy(
-  () => import('@/pages/CustomerOrderHistoryPage')
+  () => import('@/pages/customer/CustomerOrderHistoryPage')
 );
 const CustomerNotificationsPage = lazy(
-  () => import('@/pages/CustomerNotificationsPage')
+  () => import('@/pages/customer/CustomerNotificationsPage')
 );
 const CustomerOrderTrackPage = lazy(
-  () => import('@/pages/CustomerOrderTrackPage')
+  () => import('@/pages/customer/CustomerOrderTrackPage')
 );
 const CustomerProductDetailsPage = lazy(
-  () => import('@/pages/CustomerProductDetailsPage')
+  () => import('@/pages/customer/CustomerProductDetailsPage')
 );
-const AdminLoginPage = lazy(() => import('@/pages/AdminLoginPage'));
-const AdminDashboardPage = lazy(() => import('@/pages/AdminDashboardPage'));
-const AdminSalesGraphPage = lazy(() => import('@/pages/AdminSalesGraphPage'));
-const AdminStockAlertsPage = lazy(() => import('@/pages/AdminStockAlertsPage'));
+const AdminLoginPage = lazy(() => import('@/pages/admin/AdminLoginPage'));
+const AdminDashboardPage = lazy(() => import('@/pages/admin/AdminDashboardPage'));
+const AdminSalesGraphPage = lazy(
+  () => import('@/pages/admin/AdminSalesGraphPage')
+);
+const AdminStockAlertsPage = lazy(
+  () => import('@/pages/admin/AdminStockAlertsPage')
+);
 const AdminProductManagementPage = lazy(
-  () => import('@/pages/AdminProductManagementPage')
+  () => import('@/pages/admin/AdminProductManagementPage')
 );
 const AdminCustomerDetailsPage = lazy(
-  () => import('@/pages/AdminCustomerDetailsPage')
+  () => import('@/pages/admin/AdminCustomerDetailsPage')
 );
 
 export function AppRouter() {

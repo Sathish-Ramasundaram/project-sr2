@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import AppHeader from '@/components/AppHeader';
-import PageMain from '@/components/PageMain';
-import PageShell from '@/components/PageShell';
+import AppHeader from '@/components/layout/AppHeader';
+import PageMain from '@/components/layout/PageMain';
+import PageShell from '@/components/layout/PageShell';
 import CatalogueTable from '@/components/catalogue/CatalogueTable';
 import Filters from '@/components/catalogue/Filters';
 import StudentTable from '@/components/catalogue/StudentTable';
-import StoreLogo from '@/components/StoreLogo';
-import ThemeToggleButton from '@/components/ThemeToggleButton';
+import StoreLogo from '@/components/shared/StoreLogo';
+import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
 import { CATALOGUE_SYNC_KEY } from '@/utils/catalogueSync';
 import { useCatalogueData } from '@/pages/catalogue/useCatalogueData';
 import { useStudentData } from '@/pages/catalogue/useStudentData';

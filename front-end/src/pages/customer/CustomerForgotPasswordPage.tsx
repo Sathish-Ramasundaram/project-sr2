@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import AppHeader from "@/components/AppHeader";
-import PageMain from "@/components/PageMain";
-import PageShell from "@/components/PageShell";
-import StoreLogo from "@/components/StoreLogo";
-import ThemeToggleButton from "@/components/ThemeToggleButton";
+import AppHeader from "@/components/layout/AppHeader";
+import PageMain from "@/components/layout/PageMain";
+import PageShell from "@/components/layout/PageShell";
+import StoreLogo from "@/components/shared/StoreLogo";
+import ThemeToggleButton from "@/components/theme/ThemeToggleButton";
 import { clearAuthFeedback, forgotPasswordRequest } from "@/store/auth/authSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 

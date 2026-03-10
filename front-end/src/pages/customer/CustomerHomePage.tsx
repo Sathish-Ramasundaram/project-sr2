@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AppHeader from '@/components/AppHeader';
+import AppHeader from '@/components/layout/AppHeader';
 import NotificationBellButton from '@/components/customer/NotificationBellButton';
-import PageMain from '@/components/PageMain';
+import PageMain from '@/components/layout/PageMain';
 import ProductGrid from '@/components/customer-home/ProductGrid';
-import StoreLogo from '@/components/StoreLogo';
-import ThemeToggleButton from '@/components/ThemeToggleButton';
+import StoreLogo from '@/components/shared/StoreLogo';
+import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
 import { formatBackendError } from '@/utils/apiError';
 import { CATALOGUE_SYNC_KEY } from '@/utils/catalogueSync';
 import { logout } from '@/store/auth/authSlice';

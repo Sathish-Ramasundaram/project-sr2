@@ -1,9 +1,9 @@
 import { Link, Navigate } from 'react-router-dom';
-import AppHeader from '@/components/AppHeader';
-import PageMain from '@/components/PageMain';
-import PageShell from '@/components/PageShell';
-import StoreLogo from '@/components/StoreLogo';
-import ThemeToggleButton from '@/components/ThemeToggleButton';
+import AppHeader from '@/components/layout/AppHeader';
+import PageMain from '@/components/layout/PageMain';
+import PageShell from '@/components/layout/PageShell';
+import StoreLogo from '@/components/shared/StoreLogo';
+import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
 import RegisterForm from '@/pages/customer/RegisterForm';
 import { useRegisterForm } from '@/pages/customer/useRegisterForm';
 import { useAppSelector } from '@/store/hooks';

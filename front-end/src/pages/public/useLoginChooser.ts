@@ -11,9 +11,5 @@ export function useLoginChooser() {
     setIsLoginChooserOpen(false);
   };
 
-  return {
-    isLoginChooserOpen,
-    openLoginChooser,
-    closeLoginChooser,
-  };
+  return { isLoginChooserOpen, openLoginChooser, closeLoginChooser };
 }
