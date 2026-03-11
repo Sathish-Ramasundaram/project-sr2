@@ -4,12 +4,13 @@
     "description": "SR Store backend API service",
     "main": "dist/app.js",
     "scripts": {
-        "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
-        "build": "tsc",
-        "start": "node dist/app.js",
-        "temporal:worker": "ts-node-dev --respawn --transpile-only src/temporal/worker.ts",
-        "db:check": "npm run build && node dist/scripts/checkKnexConnection.js"
-    },
+    "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "start:worker": "node dist/temporal/worker.js",
+    "temporal:worker": "ts-node-dev --respawn --transpile-only src/temporal/worker.ts",
+    "db:check": "npm run build && node dist/scripts/checkKnexConnection.js"
+  },
     "keywords": [],
     "author": "",
     "license": "ISC",

@@ -1,10 +1,14 @@
 import "dotenv/config";
-import { Worker } from "@temporalio/worker";
-import path from "path";
+import { NativeConnection, Worker } from "@temporalio/worker";
 
 async function run() {
+  const connection = await NativeConnection.connect({
+    address: process.env.TEMPORAL_ADDRESS ?? "localhost:7233",
+  });
+  const workflowsPath = require.resolve("./workflows/checkoutWorkflow");
   const worker = await Worker.create({
-    workflowsPath: path.join(__dirname, "workflows", "checkoutWorkflow.ts"),
+    connection,
+    workflowsPath,
     activities: await import("./activities/checkoutActivities"),
     taskQueue: process.env.TEMPORAL_TASK_QUEUE ?? "checkout-task-queue",
     namespace: process.env.TEMPORAL_NAMESPACE ?? "default",
