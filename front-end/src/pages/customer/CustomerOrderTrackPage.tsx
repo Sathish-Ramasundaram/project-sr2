@@ -66,6 +66,8 @@ function CustomerOrderTrackPage() {
         setTrackError(null);
         const data = await graphqlRequest<TrackOrderResponse>(TRACK_ORDER, {
           orderId,
+        }, {
+          endpoint: 'http://localhost:5000/graphql',
         });
         setTrackData(data.trackOrder);
       } catch (error) {

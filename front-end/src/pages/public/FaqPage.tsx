@@ -20,7 +20,6 @@ function FaqPage() {
             <StoreLogo
               className="h-12"
               imgClassName="h-12 w-auto"
-              textClassName="text-xl font-bold"
             />
           </Link>
         }

@@ -11,6 +11,7 @@ type GraphQLResponse<T> = {
 
 type GraphQLRequestOptions = {
   skipAuth?: boolean;
+  endpoint?: string;
 };
 
 export async function graphqlRequest<T>(
@@ -19,6 +20,7 @@ export async function graphqlRequest<T>(
   options: GraphQLRequestOptions = {}
 ): Promise<T> {
   const endpoint =
+    options.endpoint ??
     (typeof process !== "undefined" ? process.env?.HASURA_GRAPHQL_URL : undefined) ??
     "http://localhost:8080/v1/graphql";
   if (!endpoint) {

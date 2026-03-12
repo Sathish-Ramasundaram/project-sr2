@@ -3,31 +3,18 @@ import { Link } from 'react-router-dom';
 import AppHeader from '@/components/layout/AppHeader';
 import PageMain from '@/components/layout/PageMain';
 import PageShell from '@/components/layout/PageShell';
+import StoreLogo from '@/components/shared/StoreLogo';
+import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
 import CatalogueTable from '@/components/catalogue/CatalogueTable';
 import Filters from '@/components/catalogue/Filters';
 import StudentTable from '@/components/catalogue/StudentTable';
-import StoreLogo from '@/components/shared/StoreLogo';
-import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
 import { CATALOGUE_SYNC_KEY } from '@/utils/catalogueSync';
 import { useCatalogueData } from '@/pages/catalogue/useCatalogueData';
 import { useStudentData } from '@/pages/catalogue/useStudentData';
 
 type PriceSort = 'default' | 'low-to-high' | 'high-to-low';
 
-const categories = [
-  'All',
-  'Grains',
-  'Vegetables',
-  'Dairy',
-  'Pulses',
-  'Fruits',
-  'Essentials',
-];
-
 function CataloguePage() {
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [priceSort, setPriceSort] = useState<PriceSort>('default');
-  const [reloadSignal, setReloadSignal] = useState(0);
 
   const todayDate = new Date().toLocaleDateString('en-IN', {
     day: '2-digit',
@@ -35,6 +22,11 @@ function CataloguePage() {
     year: 'numeric',
   });
 
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [priceSort, setPriceSort] = useState<PriceSort>('default');
+  const [reloadSignal, setReloadSignal] = useState(0);
+
+  
   const { visibleItems, groceryError, isGroceryLoading } = useCatalogueData(
     selectedCategory,
     priceSort,
@@ -60,7 +52,7 @@ function CataloguePage() {
       <AppHeader
         left={
           <StoreLogo
-            className="h-12"
+            className="mt-2 h-12"
             imgClassName="h-12 w-auto"
           />
         }

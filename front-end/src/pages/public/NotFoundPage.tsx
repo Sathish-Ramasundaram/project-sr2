@@ -8,7 +8,10 @@ function NotFoundPage() {
       <h1 className="text-6xl font-extrabold text-rose-600">404</h1>
       <p className="text-xl font-semibold text-rose-500">Page not found</p>
 
-      <Link to="/" className="mt-6 inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700">
+      <Link
+          to="/"
+          className="mt-6 inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+        >
         Go back to SR Store
       </Link>
     </div>
