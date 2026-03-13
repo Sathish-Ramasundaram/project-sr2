@@ -159,7 +159,11 @@ function AdminDashboardPage() {
   };
 
   return (
-    <AdminPageLayout title="Admin Dashboard" subtitle="Overview and quick actions.">
+    <AdminPageLayout
+      title="Admin Dashboard"
+      subtitle="Overview and quick actions."
+      showDashboardButton={false}
+    >
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {kpiCards.map((kpi) => (
           <article

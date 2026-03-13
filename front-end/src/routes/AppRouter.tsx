@@ -8,26 +8,32 @@ const HomePage = lazy(() => import('@/pages/public/HomePage'));
 const NotFoundPage = lazy(() => import('@/pages/public/NotFoundPage'));
 const CataloguePage = lazy(() => import('@/pages/public/CataloguePage'));
 const FaqPage = lazy(() => import('@/pages/public/FaqPage'));
-const CustomerLoginPage = lazy(() => import('@/pages/customer/CustomerLoginPage'));
+const CustomerLoginPage = lazy(
+  () => import('@/pages/customer/auth/CustomerLoginPage')
+);
 const CustomerForgotPasswordPage = lazy(
-  () => import('@/pages/customer/CustomerForgotPasswordPage')
+  () => import('@/pages/customer/auth/CustomerForgotPasswordPage')
 );
 const CustomerRegisterPage = lazy(
-  () => import('@/pages/customer/CustomerRegisterPage')
+  () => import('@/pages/customer/auth/CustomerRegisterPage')
 );
-const CustomerHomePage = lazy(() => import('@/pages/customer/CustomerHomePage'));
-const CustomerCartPage = lazy(() => import('@/pages/customer/CustomerCartPage'));
+const CustomerHomePage = lazy(
+  () => import('@/pages/customer/home/CustomerHomePage')
+);
+const CustomerCartPage = lazy(
+  () => import('@/pages/customer/cart/CustomerCartPage')
+);
 const CustomerOrderHistoryPage = lazy(
-  () => import('@/pages/customer/CustomerOrderHistoryPage')
+  () => import('@/pages/customer/orders/CustomerOrderHistoryPage')
 );
 const CustomerNotificationsPage = lazy(
-  () => import('@/pages/customer/CustomerNotificationsPage')
+  () => import('@/pages/customer/notifications/CustomerNotificationsPage')
 );
 const CustomerOrderTrackPage = lazy(
-  () => import('@/pages/customer/CustomerOrderTrackPage')
+  () => import('@/pages/customer/orders/CustomerOrderTrackPage')
 );
 const CustomerProductDetailsPage = lazy(
-  () => import('@/pages/customer/CustomerProductDetailsPage')
+  () => import('@/pages/customer/products/CustomerProductDetailsPage')
 );
 const AdminLoginPage = lazy(() => import('@/pages/admin/AdminLoginPage'));
 const AdminDashboardPage = lazy(() => import('@/pages/admin/AdminDashboardPage'));

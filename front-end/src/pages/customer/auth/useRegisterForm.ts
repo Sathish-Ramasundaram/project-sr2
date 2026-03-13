@@ -1,14 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { clearAuthFeedback, registerRequest } from '@/store/auth/authSlice';
 
 export function useRegisterForm() {
-  const dispatch = useAppDispatch();
-  const { status, error, info } = useAppSelector((state) => state.auth);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const dispatch = useAppDispatch();
+  const { status, error, info } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     dispatch(clearAuthFeedback());

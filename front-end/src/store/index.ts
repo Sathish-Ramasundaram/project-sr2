@@ -1,11 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
 import createSagaMiddleware from "redux-saga";
+import rootSaga from "@/store/rootSaga";
 import adminReducer from "@/store/admin/adminSlice";
 import authReducer from "@/store/auth/authSlice";
 import cartReducer from "@/store/cart/cartSlice";
 import inventoryReducer from "@/store/inventory/inventorySlice";
 import { saveInventoryState } from "@/store/inventory/inventoryStorage";
-import rootSaga from "@/store/rootSaga";
 
 const sagaMiddleware = createSagaMiddleware();
 

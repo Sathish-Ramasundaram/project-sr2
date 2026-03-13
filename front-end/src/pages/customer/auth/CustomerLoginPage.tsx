@@ -59,9 +59,8 @@ function CustomerLoginPage() {
       <AppHeader
         left={(
           <StoreLogo
-            className="h-12"
+            className="mt-2 h-12"
             imgClassName="h-12 w-auto"
-            textClassName="text-xl font-bold"
           />
         )}
         right={<ThemeToggleButton />}

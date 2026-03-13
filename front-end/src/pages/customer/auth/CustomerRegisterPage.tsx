@@ -4,8 +4,8 @@ import PageMain from '@/components/layout/PageMain';
 import PageShell from '@/components/layout/PageShell';
 import StoreLogo from '@/components/shared/StoreLogo';
 import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
-import RegisterForm from '@/pages/customer/RegisterForm';
-import { useRegisterForm } from '@/pages/customer/useRegisterForm';
+import RegisterForm from '@/pages/customer/auth/RegisterForm';
+import { useRegisterForm } from '@/pages/customer/auth/useRegisterForm';
 import { useAppSelector } from '@/store/hooks';
 
 function CustomerRegisterPage() {
@@ -32,13 +32,7 @@ function CustomerRegisterPage() {
   return (
     <PageShell>
       <AppHeader
-        left={
-          <StoreLogo
-            className="h-12"
-            imgClassName="h-12 w-auto"
-            textClassName="text-xl font-bold"
-          />
-        }
+        left={<StoreLogo className="mt-2 h-12" imgClassName="h-12 w-auto" />}
         right={<ThemeToggleButton />}
       />
 

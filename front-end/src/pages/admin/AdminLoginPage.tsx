@@ -5,14 +5,16 @@ import PageMain from "@/components/layout/PageMain";
 import PageShell from "@/components/layout/PageShell";
 import StoreLogo from "@/components/shared/StoreLogo";
 import ThemeToggleButton from "@/components/theme/ThemeToggleButton";
-import { adminLoginRequest, clearAdminFeedback } from "@/store/admin/adminSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { adminLoginRequest, clearAdminFeedback } from "@/store/admin/adminSlice";
 
 function AdminLoginPage() {
-  const dispatch = useAppDispatch();
-  const { isAuthenticated, status, error, info } = useAppSelector((state) => state.admin);
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const dispatch = useAppDispatch();
+  const { isAuthenticated, status, error, info } = useAppSelector((state) => state.admin);
 
   useEffect(() => {
     dispatch(clearAdminFeedback());
@@ -32,9 +34,8 @@ function AdminLoginPage() {
       <AppHeader
         left={(
           <StoreLogo
-            className="h-12"
+            className="mt-2 h-12"
             imgClassName="h-12 w-auto"
-            textClassName="text-xl font-bold"
           />
         )}
         right={<ThemeToggleButton />}
@@ -79,7 +80,7 @@ function AdminLoginPage() {
               disabled={status === "loading"}
               className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-70 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
             >
-              {status === "loading" ? "Signing in..." : "Submit"}
+              {status === "loading" ? "Signing in..." : "Login"}
             </button>
           </form>
 

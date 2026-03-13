@@ -30,8 +30,8 @@ const adminSlice = createSlice({
       state.info = null;
     },
     adminLoginSuccess: (state) => {
-      state.status = "succeeded";
       state.isAuthenticated = true;
+      state.status = "succeeded";
       state.error = null;
       state.info = "Admin login successful.";
     },

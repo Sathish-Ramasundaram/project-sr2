@@ -12,9 +12,15 @@ type AdminPageLayoutProps = {
   title: string;
   subtitle?: string;
   children: ReactNode;
+  showDashboardButton?: boolean;
 };
 
-function AdminPageLayout({ title, subtitle, children }: AdminPageLayoutProps) {
+function AdminPageLayout({
+  title,
+  subtitle,
+  children,
+  showDashboardButton = true,
+}: AdminPageLayoutProps) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -28,20 +34,21 @@ function AdminPageLayout({ title, subtitle, children }: AdminPageLayoutProps) {
       <AppHeader
         left={
           <StoreLogo
-            className="h-12"
+            className="mt-2 h-12"
             imgClassName="h-12 w-auto"
-            textClassName="text-xl font-bold"
           />
         }
         right={
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => navigate('/admin/dashboard')}
-              className="rounded-md bg-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600"
-            >
-              Dashboard
-            </button>
+            {showDashboardButton ? (
+              <button
+                type="button"
+                onClick={() => navigate('/admin/dashboard')}
+                className="rounded-md bg-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600"
+              >
+                Dashboard
+              </button>
+            ) : null}
             <ThemeToggleButton />
             <button
               type="button"
