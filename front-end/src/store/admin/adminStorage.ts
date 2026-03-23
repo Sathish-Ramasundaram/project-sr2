@@ -1,7 +1,4 @@
-const ADMIN_SESSION_KEY = "sr-store-admin-session";
-
-export const ADMIN_EMAIL = "admin@admin.com";
-export const ADMIN_PASSWORD = "1234";
+const ADMIN_SESSION_KEY = "isAdminLoggedIn";
 
 const isClient = typeof window !== "undefined";
 
@@ -28,4 +25,3 @@ export const clearAdminSession = () => {
 
   localStorage.removeItem(ADMIN_SESSION_KEY);
 };
-

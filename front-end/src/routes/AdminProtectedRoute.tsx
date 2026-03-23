@@ -1,8 +1,8 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useAppSelector } from "@/store/hooks";
+import { getAdminSession } from "@/store/admin/adminStorage";
 
 function AdminProtectedRoute() {
-  const isAuthenticated = useAppSelector((state) => state.admin.isAuthenticated);
+  const isAuthenticated = getAdminSession();
 
   if (!isAuthenticated) {
     return <Navigate to="/admin/login" replace />;
@@ -12,4 +12,3 @@ function AdminProtectedRoute() {
 }
 
 export default AdminProtectedRoute;
-

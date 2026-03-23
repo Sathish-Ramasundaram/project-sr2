@@ -4,6 +4,7 @@ import { corsMiddleware } from './middleware/cors';
 import { errorHandler, notFoundHandler } from './middleware/errorHandlers';
 import { graphqlSchema } from './graphql/schema';
 import { requestLogger } from './middleware/requestLogger';
+import adminAuthRouter from './routes/adminAuth';
 import adminProductsRouter from './routes/adminProducts';
 import authRouter from './routes/auth';
 import catalogueRouter from './routes/catalogue';
@@ -28,6 +29,8 @@ app.use(corsMiddleware);
 app.use('/graphql', yoga);
 
 app.use('/api/catalogue', catalogueRouter);
+app.use('/api/admin', adminAuthRouter);
+app.use('/admin', adminAuthRouter);
 app.use('/api/admin/products', adminProductsRouter);
 app.use('/api/faqs', faqsRouter);
 app.use('/api/auth', authRouter);

@@ -8,7 +8,7 @@ import HeroSection from '@/components/public/HeroSection';
 import AboutContactSection from '@/components/public/AboutContactSection';
 import Footer from '@/components/layout/Footer';
 import LoginChooser from '@/components/public/LoginChooser';
-import { useLoginChooser } from './useLoginChooser';
+import { useLoginChooser } from '../../hooks/useLoginChooser';
 import './HomePage.css';
 
 function HomePage() {

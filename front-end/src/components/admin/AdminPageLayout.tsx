@@ -5,8 +5,7 @@ import PageMain from '@/components/layout/PageMain';
 import PageShell from '@/components/layout/PageShell';
 import StoreLogo from '@/components/shared/StoreLogo';
 import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
-import { adminLogout } from '@/store/admin/adminSlice';
-import { useAppDispatch } from '@/store/hooks';
+import { clearAdminSession } from '@/store/admin/adminStorage';
 
 type AdminPageLayoutProps = {
   title: string;
@@ -21,11 +20,10 @@ function AdminPageLayout({
   children,
   showDashboardButton = true,
 }: AdminPageLayoutProps) {
-  const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    dispatch(adminLogout());
+    clearAdminSession();
     navigate('/admin/login');
   };
 

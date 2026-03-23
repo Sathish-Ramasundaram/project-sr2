@@ -1,32 +1,50 @@
-import { useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { useState } from "react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import AppHeader from "@/components/layout/AppHeader";
 import PageMain from "@/components/layout/PageMain";
 import PageShell from "@/components/layout/PageShell";
 import StoreLogo from "@/components/shared/StoreLogo";
 import ThemeToggleButton from "@/components/theme/ThemeToggleButton";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { adminLoginRequest, clearAdminFeedback } from "@/store/admin/adminSlice";
+import { getAdminSession, setAdminSession } from "@/store/admin/adminStorage";
 
 function AdminLoginPage() {
-  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const dispatch = useAppDispatch();
-  const { isAuthenticated, status, error, info } = useAppSelector((state) => state.admin);
-
-  useEffect(() => {
-    dispatch(clearAdminFeedback());
-  }, [dispatch]);
-
-  if (isAuthenticated) {
+  if (getAdminSession()) {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    dispatch(adminLoginRequest({ email, password }));
+    setMessage("");
+    setIsLoading(true);
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      const response = await fetch("http://localhost:5000/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data: { message?: string } = await response.json();
+
+      if (response.ok) {
+        setAdminSession();
+        navigate("/admin/dashboard");
+        return;
+      }
+
+      setMessage(data.message ?? "Login failed");
+    } catch (error) {
+      setMessage("Server error. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -55,6 +73,7 @@ function AdminLoginPage() {
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
+                required
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-700"
               />
             </div>
@@ -68,19 +87,19 @@ function AdminLoginPage() {
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
+                required
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-700"
               />
             </div>
 
-            {error && <p className="text-sm text-rose-600 dark:text-rose-400">{error}</p>}
-            {info && <p className="text-sm text-emerald-700 dark:text-emerald-400">{info}</p>}
+            {message && <p className="text-sm text-rose-600 dark:text-rose-400">{message}</p>}
 
             <button
               type="submit"
-              disabled={status === "loading"}
+              disabled={isLoading}
               className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-70 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
             >
-              {status === "loading" ? "Signing in..." : "Login"}
+              {isLoading ? "Signing in..." : "Login"}
             </button>
           </form>
 

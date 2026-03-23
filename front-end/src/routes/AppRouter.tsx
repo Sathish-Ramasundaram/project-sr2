@@ -71,6 +71,7 @@ export function AppRouter() {
             element={<CustomerForgotPasswordPage />}
           />
           <Route path="/customer/register" element={<CustomerRegisterPage />} />
+          
           <Route element={<ProtectedRoute />}>
             <Route path="/customer/home" element={<CustomerHomePage />} />
             <Route path="/customer/cart" element={<CustomerCartPage />} />
@@ -90,6 +91,7 @@ export function AppRouter() {
               path="/customer/product/:productId"
               element={<CustomerProductDetailsPage />}
             />
+
           </Route>
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route element={<AdminProtectedRoute />}>

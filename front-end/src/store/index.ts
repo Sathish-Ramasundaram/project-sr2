@@ -1,7 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import createSagaMiddleware from "redux-saga";
 import rootSaga from "@/store/rootSaga";
-import adminReducer from "@/store/admin/adminSlice";
 import authReducer from "@/store/auth/authSlice";
 import cartReducer from "@/store/cart/cartSlice";
 import inventoryReducer from "@/store/inventory/inventorySlice";
@@ -12,7 +11,6 @@ const sagaMiddleware = createSagaMiddleware();
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    admin: adminReducer,
     cart: cartReducer,
     inventory: inventoryReducer,
   },
