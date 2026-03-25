@@ -1,4 +1,5 @@
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { graphqlRequest } from "@/api/graphqlClient";
 import { formatBackendError } from "@/utils/apiError";
 import { emitCatalogueSync } from "@/utils/catalogueSync";
 import type { ActionTarget, AdminProduct, NewProductForm } from "@/pages/admin-dashboard/types";
@@ -9,6 +10,250 @@ const initialNewProductForm: NewProductForm = {
   description: "",
   imageUrl: ""
 };
+
+type FindProductByNameResponse = {
+  products: Array<{
+    id: string;
+    name: string;
+    is_active: boolean;
+  }>;
+};
+
+type MaxDisplayOrderResponse = {
+  products_aggregate: {
+    aggregate: {
+      max: {
+        display_order: number | null;
+      } | null;
+    } | null;
+  };
+};
+
+type InsertProductResponse = {
+  insert_products_one: {
+    id: string;
+  } | null;
+};
+
+type AdminProductsResponse = {
+  products: Array<{
+    id: string;
+    name: string;
+    display_order: number | null;
+    category: string | null;
+    image_url: string;
+    unit: string;
+    price: number;
+    description: string | null;
+    is_active: boolean;
+    inventory: {
+      stock: number;
+      reorder_threshold: number;
+    } | null;
+  }>;
+};
+
+const FIND_PRODUCT_BY_NAME = `
+query FindProductByName($name: String!) {
+  products(where: { name: { _ilike: $name } }, limit: 1) {
+    id
+    name
+    is_active
+  }
+}
+`;
+
+const GET_MAX_DISPLAY_ORDER = `
+query GetMaxDisplayOrder {
+  products_aggregate(where: { is_active: { _eq: true } }) {
+    aggregate {
+      max {
+        display_order
+      }
+    }
+  }
+}
+`;
+
+const GET_ACTIVE_PRODUCTS = `
+query GetActiveProductsForAdmin {
+  products(
+    where: { is_active: { _eq: true } }
+    order_by: [{ display_order: asc_nulls_last }, { name: asc }]
+  ) {
+    id
+    name
+    display_order
+    category
+    image_url
+    unit
+    price
+    description
+    is_active
+    inventory {
+      stock
+      reorder_threshold
+    }
+  }
+}
+`;
+
+const INSERT_PRODUCT = `
+mutation InsertProduct(
+  $name: String!
+  $displayOrder: Int!
+  $category: String!
+  $sku: String!
+  $unit: String!
+  $price: numeric!
+  $description: String
+  $imageUrl: String
+) {
+  insert_products_one(
+    object: {
+      name: $name
+      display_order: $displayOrder
+      category: $category
+      sku: $sku
+      unit: $unit
+      price: $price
+      description: $description
+      image_url: $imageUrl
+      is_active: true
+    }
+  ) {
+    id
+  }
+}
+`;
+
+const UPDATE_PRODUCT_CATEGORY = `
+mutation UpdateProductCategory($productId: uuid!, $category: String!) {
+  update_products(
+    where: { id: { _eq: $productId } }
+    _set: { category: $category }
+  ) {
+    affected_rows
+    returning {
+      id
+      category
+    }
+  }
+}
+`;
+
+const UPDATE_PRODUCT_UNIT = `
+mutation UpdateProductUnit($productId: uuid!, $unit: String!) {
+  update_products(
+    where: { id: { _eq: $productId } }
+    _set: { unit: $unit }
+  ) {
+    affected_rows
+    returning {
+      id
+      unit
+    }
+  }
+}
+`;
+
+const UPDATE_PRODUCT_PRICE = `
+mutation UpdateProductPrice($productId: uuid!, $price: numeric!) {
+  update_products(
+    where: { id: { _eq: $productId } }
+    _set: { price: $price }
+  ) {
+    affected_rows
+    returning {
+      id
+      price
+    }
+  }
+}
+`;
+
+const UPDATE_PRODUCT_DISPLAY_ORDER = `
+mutation UpdateProductDisplayOrder($productId: uuid!, $displayOrder: Int!) {
+  update_products(
+    where: { id: { _eq: $productId } }
+    _set: { display_order: $displayOrder }
+  ) {
+    affected_rows
+    returning {
+      id
+      display_order
+    }
+  }
+}
+`;
+
+const INSERT_INVENTORY = `
+mutation InsertInventory(
+  $productId: uuid!
+  $stock: Int!
+  $reorderThreshold: Int!
+) {
+  insert_inventory_one(
+    object: {
+      product_id: $productId
+      stock: $stock
+      reorder_threshold: $reorderThreshold
+    }
+  ) {
+    id
+  }
+}
+`;
+
+const SET_REORDER_THRESHOLD = `
+mutation SetReorderThreshold($productId: uuid!, $reorderThreshold: Int!) {
+  update_inventory(
+    where: { product_id: { _eq: $productId } }
+    _set: { reorder_threshold: $reorderThreshold }
+  ) {
+    affected_rows
+    returning {
+      reorder_threshold
+    }
+  }
+}
+`;
+
+const SET_STOCK = `
+mutation SetStock($productId: uuid!, $stock: Int!) {
+  update_inventory(
+    where: { product_id: { _eq: $productId } }
+    _set: { stock: $stock }
+  ) {
+    affected_rows
+    returning {
+      stock
+    }
+  }
+}
+`;
+
+const SET_PRODUCT_ACTIVE = `
+mutation SetProductActive($productId: uuid!, $isActive: Boolean!) {
+  update_products(
+    where: { id: { _eq: $productId } }
+    _set: { is_active: $isActive }
+  ) {
+    affected_rows
+    returning {
+      id
+      is_active
+    }
+  }
+}
+`;
+
+const slugify = (value: string): string =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
 export function useAdminProductEditor() {
   const [products, setProducts] = useState<AdminProduct[]>([]);
@@ -33,10 +278,16 @@ export function useAdminProductEditor() {
   const [pendingReactivateProductId, setPendingReactivateProductId] = useState<string | null>(null);
   const [pendingReactivateName, setPendingReactivateName] = useState<string | null>(null);
 
-  const getAuthHeaders = useCallback(() => {
-    const token = getAdminToken();
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }, []);
+  const graphqlAdminRequest = useCallback(
+    async <T,>(query: string, variables: Record<string, unknown> = {}) => {
+      const token = getAdminToken();
+      if (!token) {
+        throw new Error("Admin session expired. Please log in again.");
+      }
+      return graphqlRequest<T>(query, variables, { authToken: token });
+    },
+    []
+  );
 
   const applySelectionToForm = useCallback((nextProducts: AdminProduct[], productId: string) => {
     const selectedIndex = nextProducts.findIndex((item) => item.id === productId);
@@ -67,15 +318,20 @@ export function useAdminProductEditor() {
     try {
       setProductsError(null);
       setIsProductsLoading(true);
-      const response = await fetch("http://localhost:5000/api/admin/products", {
-        headers: getAuthHeaders()
-      });
-      if (!response.ok) {
-        throw new Error("Failed to load products");
-      }
-
-      const data = (await response.json()) as AdminProduct[];
-      setProducts(data);
+      const data = await graphqlAdminRequest<AdminProductsResponse>(GET_ACTIVE_PRODUCTS);
+      const mapped = data.products.map((product) => ({
+        id: product.id,
+        name: product.name,
+        displayOrder: product.display_order ?? 1,
+        category: product.category ?? "Essentials",
+        imageUrl: product.image_url ?? "",
+        quantity: product.unit,
+        price: Number(product.price),
+        description: product.description ?? "",
+        stock: product.inventory?.stock ?? 0,
+        reorderThreshold: product.inventory?.reorder_threshold ?? 0
+      }));
+      setProducts(mapped);
 
       if (!selectedProductId) {
         if (!isEditDirty) {
@@ -84,7 +340,7 @@ export function useAdminProductEditor() {
         return;
       }
 
-      const isSelectionPresent = data.some((item) => item.id === selectedProductId);
+      const isSelectionPresent = mapped.some((item) => item.id === selectedProductId);
       if (!isSelectionPresent) {
         setSelectedProductId("");
         if (!isEditDirty) {
@@ -94,7 +350,7 @@ export function useAdminProductEditor() {
       }
 
       if (!isEditDirty) {
-        applySelectionToForm(data, selectedProductId);
+        applySelectionToForm(mapped, selectedProductId);
       }
     } catch (error) {
       setProducts([]);
@@ -102,7 +358,7 @@ export function useAdminProductEditor() {
     } finally {
       setIsProductsLoading(false);
     }
-  }, [applySelectionToForm, getAuthHeaders, isEditDirty, resetEditForm, selectedProductId]);
+  }, [applySelectionToForm, graphqlAdminRequest, isEditDirty, resetEditForm, selectedProductId]);
 
   useEffect(() => {
     void refreshProducts();
@@ -139,29 +395,54 @@ export function useAdminProductEditor() {
       setActionTarget("add");
       setIsActionLoading(true);
 
-      const response = await fetch("http://localhost:5000/api/admin/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({
-          name: newProductForm.name,
-          description: newProductForm.description,
-          imageUrl: newProductForm.imageUrl
-        })
+      const name = newProductForm.name.trim();
+      if (!name) {
+        throw new Error("Product name is required.");
+      }
+
+      const existing = await graphqlAdminRequest<FindProductByNameResponse>(FIND_PRODUCT_BY_NAME, {
+        name
+      });
+      const existingProduct = existing.products[0];
+      if (existingProduct) {
+        if (!existingProduct.is_active) {
+          setPendingReactivateProductId(existingProduct.id);
+          setPendingReactivateName(existingProduct.name ?? name);
+          return;
+        }
+        throw new Error(`"${existingProduct.name}" already exists.`);
+      }
+
+      const maxOrderResult = await graphqlAdminRequest<MaxDisplayOrderResponse>(
+        GET_MAX_DISPLAY_ORDER
+      );
+      const nextDisplayOrder =
+        (maxOrderResult.products_aggregate.aggregate?.max?.display_order ?? 0) + 1;
+
+      const sku = `${slugify(name)}-${Date.now()}`;
+      const productResult = await graphqlAdminRequest<InsertProductResponse>(INSERT_PRODUCT, {
+        name,
+        displayOrder: nextDisplayOrder,
+        category: "Essentials",
+        sku,
+        unit: "",
+        price: 0,
+        description: newProductForm.description?.trim() || null,
+        imageUrl: newProductForm.imageUrl?.trim() || null
       });
 
-      const body = (await response.json()) as { message?: string; code?: string; productId?: string; name?: string };
-
-      if (response.status === 409 && body.code === "PRODUCT_DEACTIVATED" && body.productId) {
-        setPendingReactivateProductId(body.productId);
-        setPendingReactivateName(body.name ?? newProductForm.name);
-        return;
+      const createdId = productResult.insert_products_one?.id;
+      if (!createdId) {
+        throw new Error("Product creation failed.");
       }
 
-      if (!response.ok) {
-        throw new Error(body.message ?? "Failed to add product");
-      }
+      await graphqlAdminRequest(INSERT_INVENTORY, {
+        productId: createdId,
+        stock: 0,
+        reorderThreshold: 100
+      });
 
-      setActionInfo(body.message ?? "Product added successfully.");
+      setActionInfo("Product added successfully.");
       setNewProductForm(initialNewProductForm);
       await refreshProducts();
     } catch (error) {
@@ -179,21 +460,12 @@ export function useAdminProductEditor() {
       setActionTarget("add");
       setIsActionLoading(true);
 
-      const response = await fetch(
-        `http://localhost:5000/api/admin/products/${pendingReactivateProductId}/active`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-          body: JSON.stringify({ isActive: true })
-        }
-      );
+      await graphqlAdminRequest(SET_PRODUCT_ACTIVE, {
+        productId: pendingReactivateProductId,
+        isActive: true
+      });
 
-      const body = (await response.json()) as { message?: string };
-      if (!response.ok) {
-        throw new Error(body.message ?? "Failed to reactivate product");
-      }
-
-      setActionInfo(body.message ?? "Product reactivated successfully.");
+      setActionInfo("Product reactivated successfully.");
       setNewProductForm(initialNewProductForm);
       setPendingReactivateProductId(null);
       setPendingReactivateName(null);
@@ -219,21 +491,12 @@ export function useAdminProductEditor() {
       setActionTarget("update");
       setIsActionLoading(true);
 
-      const response = await fetch(
-        `http://localhost:5000/api/admin/products/${selectedProductId}/active`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-          body: JSON.stringify({ isActive: false })
-        }
-      );
+      await graphqlAdminRequest(SET_PRODUCT_ACTIVE, {
+        productId: selectedProductId,
+        isActive: false
+      });
 
-      const body = (await response.json()) as { message?: string };
-      if (!response.ok) {
-        throw new Error(body.message ?? "Failed to deactivate product");
-      }
-
-      setActionInfo(body.message ?? "Product deactivated successfully.");
+      setActionInfo("Product deactivated successfully.");
       setSelectedProductId("");
       setIsEditDirty(false);
       resetEditForm();
@@ -259,46 +522,57 @@ export function useAdminProductEditor() {
       setActionTarget("update");
       setIsActionLoading(true);
 
-      const requests = [
-        fetch(`http://localhost:5000/api/admin/products/${selectedProductId}/category`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-          body: JSON.stringify({ category: selectedCategory })
-        }),
-        fetch(`http://localhost:5000/api/admin/products/${selectedProductId}/display-order`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-          body: JSON.stringify({ displayOrder: Math.max(0, Number(displayOrderInput) - 1) })
-        }),
-        fetch(`http://localhost:5000/api/admin/products/${selectedProductId}/unit`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-          body: JSON.stringify({ unit: unitInput })
-        }),
-        fetch(`http://localhost:5000/api/admin/products/${selectedProductId}/price`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-          body: JSON.stringify({ price: Number(priceInput) })
-        }),
-        fetch(`http://localhost:5000/api/admin/products/${selectedProductId}/reorder-threshold`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-          body: JSON.stringify({ reorderThreshold: Number(reorderThresholdInput) })
-        }),
-        fetch(`http://localhost:5000/api/admin/products/${selectedProductId}/stock`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-          body: JSON.stringify({ stock: Number(stockInput) })
-        })
+      const nextDisplayOrder = Math.max(0, Number(displayOrderInput) - 1);
+      const allProducts = await graphqlAdminRequest<AdminProductsResponse>(GET_ACTIVE_PRODUCTS);
+      const productExists = allProducts.products.find((item) => item.id === selectedProductId);
+      if (!productExists) {
+        throw new Error("Product not found.");
+      }
+
+      const others = allProducts.products.filter((item) => item.id !== selectedProductId);
+      const insertAt = Math.min(nextDisplayOrder, others.length);
+      const reordered = [
+        ...others.slice(0, insertAt),
+        { id: selectedProductId, display_order: nextDisplayOrder },
+        ...others.slice(insertAt)
       ];
 
-      const responses = await Promise.all(requests);
-      for (const response of responses) {
-        const body = (await response.json()) as { message?: string };
-        if (!response.ok) {
-          throw new Error(body.message ?? "Failed to update item details");
-        }
-      }
+      const displayOrderUpdates = reordered
+        .map((item, index) => ({ id: item.id, newOrder: index }))
+        .filter(({ id, newOrder }) => {
+          const current = allProducts.products.find((product) => product.id === id);
+          return current?.display_order !== newOrder;
+        })
+        .map(({ id, newOrder }) =>
+          graphqlAdminRequest(UPDATE_PRODUCT_DISPLAY_ORDER, {
+            productId: id,
+            displayOrder: newOrder
+          })
+        );
+
+      await Promise.all([
+        graphqlAdminRequest(UPDATE_PRODUCT_CATEGORY, {
+          productId: selectedProductId,
+          category: selectedCategory
+        }),
+        graphqlAdminRequest(UPDATE_PRODUCT_UNIT, {
+          productId: selectedProductId,
+          unit: unitInput
+        }),
+        graphqlAdminRequest(UPDATE_PRODUCT_PRICE, {
+          productId: selectedProductId,
+          price: Number(priceInput)
+        }),
+        graphqlAdminRequest(SET_REORDER_THRESHOLD, {
+          productId: selectedProductId,
+          reorderThreshold: Number(reorderThresholdInput)
+        }),
+        graphqlAdminRequest(SET_STOCK, {
+          productId: selectedProductId,
+          stock: Number(stockInput)
+        }),
+        ...displayOrderUpdates
+      ]);
 
       setIsEditDirty(false);
       await refreshProducts();

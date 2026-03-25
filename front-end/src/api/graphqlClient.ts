@@ -12,6 +12,7 @@ type GraphQLResponse<T> = {
 type GraphQLRequestOptions = {
   skipAuth?: boolean;
   endpoint?: string;
+  authToken?: string;
 };
 
 export async function graphqlRequest<T>(
@@ -32,7 +33,7 @@ export async function graphqlRequest<T>(
   };
 
   if (!options.skipAuth) {
-    const token = getAuthToken();
+    const token = options.authToken ?? getAuthToken();
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
