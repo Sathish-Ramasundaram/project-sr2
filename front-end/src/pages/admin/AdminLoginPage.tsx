@@ -5,7 +5,7 @@ import PageMain from "@/components/layout/PageMain";
 import PageShell from "@/components/layout/PageShell";
 import StoreLogo from "@/components/shared/StoreLogo";
 import ThemeToggleButton from "@/components/theme/ThemeToggleButton";
-import { getAdminSession, setAdminSession } from "@/store/admin/adminStorage";
+import { getAdminSession, getAdminToken, setAdminSession, setAdminToken } from "@/store/admin/adminStorage";
 
 function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -14,7 +14,7 @@ function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  if (getAdminSession()) {
+  if (getAdminSession() && getAdminToken()) {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
@@ -31,12 +31,17 @@ function AdminLoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      const data: { message?: string } = await response.json();
+      const data: { message?: string; token?: string } = await response.json();
 
       if (response.ok) {
-        setAdminSession();
-        navigate("/admin/dashboard");
-        return;
+        if (!data.token) {
+          setMessage("Login failed: missing token.");
+        } else {
+          setAdminToken(data.token);
+          setAdminSession();
+          navigate("/admin/dashboard");
+          return;
+        }
       }
 
       setMessage(data.message ?? "Login failed");

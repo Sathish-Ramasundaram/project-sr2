@@ -1,8 +1,8 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { getAdminSession } from "@/store/admin/adminStorage";
+import { getAdminSession, getAdminToken } from "@/store/admin/adminStorage";
 
 function AdminProtectedRoute() {
-  const isAuthenticated = getAdminSession();
+  const isAuthenticated = getAdminSession() && Boolean(getAdminToken());
 
   if (!isAuthenticated) {
     return <Navigate to="/admin/login" replace />;

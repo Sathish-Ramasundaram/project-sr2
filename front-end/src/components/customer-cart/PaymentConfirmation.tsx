@@ -13,8 +13,8 @@ function PaymentConfirmation({
   isPlacingOrder,
   sectionRef,
 }: PaymentConfirmationProps) {
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
+  const [cardNumber, setCardNumber] = useState('1234567890123456');
+  const [expiryDate, setExpiryDate] = useState('12/12');
   const [cvv, setCvv] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -123,7 +123,9 @@ function PaymentConfirmation({
         </div>
 
         {formError ? (
-          <p className="text-sm text-rose-700 dark:text-rose-300">{formError}</p>
+          <p className="text-sm text-rose-700 dark:text-rose-300">
+            {formError}
+          </p>
         ) : null}
 
         <button

@@ -7,6 +7,7 @@ import type {
   SalesSummaryItem,
   SalesSummaryResponse
 } from "@/pages/admin-dashboard/types";
+import { getAdminToken } from "@/store/admin/adminStorage";
 
 export function useAdminSalesData() {
   const [salesByProduct, setSalesByProduct] = useState<SalesSummaryItem[]>([]);
@@ -20,6 +21,11 @@ export function useAdminSalesData() {
     toInputDate(startOfDay(new Date(Date.now() - 29 * 24 * 60 * 60 * 1000)))
   );
   const [toDate, setToDate] = useState<string>(() => toInputDate(new Date()));
+
+  const getAuthHeaders = useCallback(() => {
+    const token = getAdminToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }, []);
 
   const filterRange = useMemo(() => {
     const now = new Date();
@@ -51,7 +57,8 @@ export function useAdminSalesData() {
         to: filterRange.to.toISOString()
       });
       const response = await fetch(
-        `http://localhost:5000/api/admin/products/sales-summary?${query.toString()}`
+        `http://localhost:5000/api/admin/products/sales-summary?${query.toString()}`,
+        { headers: getAuthHeaders() }
       );
       const body = (await response.json()) as SalesSummaryResponse | { message?: string };
       if (!response.ok) {
@@ -70,7 +77,7 @@ export function useAdminSalesData() {
     } finally {
       setIsSalesLoading(false);
     }
-  }, [filterRange.from, filterRange.to]);
+  }, [filterRange.from, filterRange.to, getAuthHeaders]);
 
   useEffect(() => {
     void refreshSalesSummary();

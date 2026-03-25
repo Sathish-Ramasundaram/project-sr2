@@ -2,6 +2,7 @@ import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react
 import { formatBackendError } from "@/utils/apiError";
 import { emitCatalogueSync } from "@/utils/catalogueSync";
 import type { ActionTarget, AdminProduct, NewProductForm } from "@/pages/admin-dashboard/types";
+import { getAdminToken } from "@/store/admin/adminStorage";
 
 const initialNewProductForm: NewProductForm = {
   name: "",
@@ -32,6 +33,11 @@ export function useAdminProductEditor() {
   const [pendingReactivateProductId, setPendingReactivateProductId] = useState<string | null>(null);
   const [pendingReactivateName, setPendingReactivateName] = useState<string | null>(null);
 
+  const getAuthHeaders = useCallback(() => {
+    const token = getAdminToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }, []);
+
   const applySelectionToForm = useCallback((nextProducts: AdminProduct[], productId: string) => {
     const selectedIndex = nextProducts.findIndex((item) => item.id === productId);
     if (selectedIndex === -1) {
@@ -61,7 +67,9 @@ export function useAdminProductEditor() {
     try {
       setProductsError(null);
       setIsProductsLoading(true);
-      const response = await fetch("http://localhost:5000/api/admin/products");
+      const response = await fetch("http://localhost:5000/api/admin/products", {
+        headers: getAuthHeaders()
+      });
       if (!response.ok) {
         throw new Error("Failed to load products");
       }
@@ -94,7 +102,7 @@ export function useAdminProductEditor() {
     } finally {
       setIsProductsLoading(false);
     }
-  }, [applySelectionToForm, isEditDirty, resetEditForm, selectedProductId]);
+  }, [applySelectionToForm, getAuthHeaders, isEditDirty, resetEditForm, selectedProductId]);
 
   useEffect(() => {
     void refreshProducts();
@@ -133,7 +141,7 @@ export function useAdminProductEditor() {
 
       const response = await fetch("http://localhost:5000/api/admin/products", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({
           name: newProductForm.name,
           description: newProductForm.description,
@@ -175,7 +183,7 @@ export function useAdminProductEditor() {
         `http://localhost:5000/api/admin/products/${pendingReactivateProductId}/active`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
           body: JSON.stringify({ isActive: true })
         }
       );
@@ -215,7 +223,7 @@ export function useAdminProductEditor() {
         `http://localhost:5000/api/admin/products/${selectedProductId}/active`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
           body: JSON.stringify({ isActive: false })
         }
       );
@@ -254,32 +262,32 @@ export function useAdminProductEditor() {
       const requests = [
         fetch(`http://localhost:5000/api/admin/products/${selectedProductId}/category`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
           body: JSON.stringify({ category: selectedCategory })
         }),
         fetch(`http://localhost:5000/api/admin/products/${selectedProductId}/display-order`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
           body: JSON.stringify({ displayOrder: Math.max(0, Number(displayOrderInput) - 1) })
         }),
         fetch(`http://localhost:5000/api/admin/products/${selectedProductId}/unit`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
           body: JSON.stringify({ unit: unitInput })
         }),
         fetch(`http://localhost:5000/api/admin/products/${selectedProductId}/price`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
           body: JSON.stringify({ price: Number(priceInput) })
         }),
         fetch(`http://localhost:5000/api/admin/products/${selectedProductId}/reorder-threshold`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
           body: JSON.stringify({ reorderThreshold: Number(reorderThresholdInput) })
         }),
         fetch(`http://localhost:5000/api/admin/products/${selectedProductId}/stock`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
           body: JSON.stringify({ stock: Number(stockInput) })
         })
       ];
