@@ -4,7 +4,7 @@ import AppHeader from '@/components/layout/AppHeader';
 import NotificationBellButton from '@/components/customer/NotificationBellButton';
 import PageMain from '@/components/layout/PageMain';
 import PageShell from '@/components/layout/PageShell';
-import StoreLogo from '@/components/shared/StoreLogo';
+import StoreLogo from '@/components/public/StoreLogo';
 import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
 import { graphqlRequest } from '@/api/graphqlClient';
 import { TRACK_ORDER } from '@/api/operations';
@@ -44,7 +44,9 @@ function CustomerOrderTrackPage() {
   const customerInitial = customerName.charAt(0).toUpperCase();
   const [isLoading, setIsLoading] = useState(true);
   const [trackError, setTrackError] = useState<string | null>(null);
-  const [trackData, setTrackData] = useState<TrackOrderResponse['trackOrder'] | null>(null);
+  const [trackData, setTrackData] = useState<
+    TrackOrderResponse['trackOrder'] | null
+  >(null);
 
   useEffect(() => {
     if (!user?.id) {
@@ -64,11 +66,15 @@ function CustomerOrderTrackPage() {
       try {
         setIsLoading(true);
         setTrackError(null);
-        const data = await graphqlRequest<TrackOrderResponse>(TRACK_ORDER, {
-          orderId,
-        }, {
-          endpoint: 'http://localhost:5000/graphql',
-        });
+        const data = await graphqlRequest<TrackOrderResponse>(
+          TRACK_ORDER,
+          {
+            orderId,
+          },
+          {
+            endpoint: 'http://localhost:5000/graphql',
+          }
+        );
         setTrackData(data.trackOrder);
       } catch (error) {
         setTrackData(null);
@@ -166,7 +172,8 @@ function CustomerOrderTrackPage() {
                     Order ID: {trackData.order.orderId}
                   </p>
                   <p className="text-sm text-slate-600 dark:text-slate-300">
-                    Placed: {new Date(trackData.order.placedAt).toLocaleString()}
+                    Placed:{' '}
+                    {new Date(trackData.order.placedAt).toLocaleString()}
                   </p>
                 </div>
                 <div className="text-right">

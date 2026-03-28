@@ -4,7 +4,7 @@ import AppHeader from '@/components/layout/AppHeader';
 import NotificationBellButton from '@/components/customer/NotificationBellButton';
 import PageMain from '@/components/layout/PageMain';
 import ProductGrid from '@/components/customer-home/ProductGrid';
-import StoreLogo from '@/components/shared/StoreLogo';
+import StoreLogo from '@/components/public/StoreLogo';
 import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
 import { formatBackendError } from '@/utils/apiError';
 import { CATALOGUE_SYNC_KEY } from '@/utils/catalogueSync';
@@ -128,10 +128,7 @@ function CustomerHomePage() {
         <AppHeader
           left={
             <div>
-              <StoreLogo
-                className="h-12"
-                imgClassName="h-12 w-auto"
-              />
+              <StoreLogo className="mt-2 h-12" imgClassName="h-12 w-auto" />
             </div>
           }
           right={

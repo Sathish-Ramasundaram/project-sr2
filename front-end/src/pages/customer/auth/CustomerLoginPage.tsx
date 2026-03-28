@@ -1,22 +1,29 @@
-import { useEffect, useState } from "react";
-import { Link, Navigate, useSearchParams } from "react-router-dom";
-import AppHeader from "@/components/layout/AppHeader";
-import PageMain from "@/components/layout/PageMain";
-import PageShell from "@/components/layout/PageShell";
-import StoreLogo from "@/components/shared/StoreLogo";
-import ThemeToggleButton from "@/components/theme/ThemeToggleButton";
-import { clearAuthFeedback, loginRequest, logout } from "@/store/auth/authSlice";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { isCustomerActiveInAnotherTab } from "@/store/auth/authStorage";
+import { useEffect, useState } from 'react';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
+import AppHeader from '@/components/layout/AppHeader';
+import PageMain from '@/components/layout/PageMain';
+import PageShell from '@/components/layout/PageShell';
+import StoreLogo from '@/components/public/StoreLogo';
+import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
+import {
+  clearAuthFeedback,
+  loginRequest,
+  logout,
+} from '@/store/auth/authSlice';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { isCustomerActiveInAnotherTab } from '@/store/auth/authStorage';
 
 function CustomerLoginPage() {
   const dispatch = useAppDispatch();
   const [searchParams] = useSearchParams();
-  const isSwitchAccount = searchParams.get("switch") === "1";
-  const { isAuthenticated, status, error, info } = useAppSelector((state) => state.auth);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [hasProcessedSwitchFlow, setHasProcessedSwitchFlow] = useState(!isSwitchAccount);
+  const isSwitchAccount = searchParams.get('switch') === '1';
+  const { isAuthenticated, status, error, info } = useAppSelector(
+    (state) => state.auth
+  );
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [hasProcessedSwitchFlow, setHasProcessedSwitchFlow] =
+    useState(!isSwitchAccount);
 
   useEffect(() => {
     dispatch(clearAuthFeedback());
@@ -44,7 +51,7 @@ function CustomerLoginPage() {
     const normalizedEmail = email.trim().toLowerCase();
     if (isCustomerActiveInAnotherTab(normalizedEmail)) {
       const shouldContinue = window.confirm(
-        "This account may already be active in another tab in this browser. Do you want to continue login here?"
+        'This account may already be active in another tab in this browser. Do you want to continue login here?'
       );
       if (!shouldContinue) {
         return;
@@ -57,12 +64,7 @@ function CustomerLoginPage() {
   return (
     <PageShell>
       <AppHeader
-        left={(
-          <StoreLogo
-            className="mt-2 h-12"
-            imgClassName="h-12 w-auto"
-          />
-        )}
+        left={<StoreLogo className="mt-2 h-12" imgClassName="h-12 w-auto" />}
         right={<ThemeToggleButton />}
       />
 
@@ -71,7 +73,10 @@ function CustomerLoginPage() {
           <h2 className="text-2xl font-bold">Customer Login</h2>
           <form onSubmit={handleSubmit} className="mt-5 space-y-4">
             <div>
-              <label htmlFor="login-email" className="block text-sm font-medium">
+              <label
+                htmlFor="login-email"
+                className="block text-sm font-medium"
+              >
                 Email
               </label>
               <input
@@ -84,7 +89,10 @@ function CustomerLoginPage() {
             </div>
 
             <div>
-              <label htmlFor="login-password" className="block text-sm font-medium">
+              <label
+                htmlFor="login-password"
+                className="block text-sm font-medium"
+              >
                 Password
               </label>
               <input
@@ -96,26 +104,43 @@ function CustomerLoginPage() {
               />
             </div>
 
-            {error && <p className="text-sm text-rose-600 dark:text-rose-400">{error}</p>}
-            {info && <p className="text-sm text-emerald-700 dark:text-emerald-400">{info}</p>}
+            {error && (
+              <p className="text-sm text-rose-600 dark:text-rose-400">
+                {error}
+              </p>
+            )}
+            {info && (
+              <p className="text-sm text-emerald-700 dark:text-emerald-400">
+                {info}
+              </p>
+            )}
 
             <button
               type="submit"
-              disabled={status === "loading"}
+              disabled={status === 'loading'}
               className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-70 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
             >
-              {status === "loading" ? "Logging in..." : "Login"}
+              {status === 'loading' ? 'Logging in...' : 'Login'}
             </button>
           </form>
 
           <div className="mt-4 flex items-center justify-between text-sm">
-            <Link to="/" className="text-sky-700 hover:underline dark:text-sky-400">
+            <Link
+              to="/"
+              className="text-sky-700 hover:underline dark:text-sky-400"
+            >
               Back to Home
             </Link>
-            <Link to="/customer/forgot-password" className="text-sky-700 hover:underline dark:text-sky-400">
+            <Link
+              to="/customer/forgot-password"
+              className="text-sky-700 hover:underline dark:text-sky-400"
+            >
               Forgot Password
             </Link>
-            <Link to="/customer/register" className="text-sky-700 hover:underline dark:text-sky-400">
+            <Link
+              to="/customer/register"
+              className="text-sky-700 hover:underline dark:text-sky-400"
+            >
               Create Account
             </Link>
           </div>
@@ -126,7 +151,3 @@ function CustomerLoginPage() {
 }
 
 export default CustomerLoginPage;
-
-
-
-

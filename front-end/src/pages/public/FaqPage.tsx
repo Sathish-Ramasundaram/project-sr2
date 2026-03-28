@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import AppHeader from '@/components/layout/AppHeader';
 import PageMain from '@/components/layout/PageMain';
 import PageShell from '@/components/layout/PageShell';
-import StoreLogo from '@/components/shared/StoreLogo';
+import StoreLogo from '@/components/public/StoreLogo';
 import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
 import FaqForm from '@/pages/faq/FaqForm';
 import FaqList from '@/pages/faq/FaqList';
@@ -17,10 +17,7 @@ function FaqPage() {
       <AppHeader
         left={
           <Link to="/" className="inline-flex items-center">
-            <StoreLogo
-              className="h-12"
-              imgClassName="h-12 w-auto"
-            />
+            <StoreLogo className="h-12" imgClassName="h-12 w-auto" />
           </Link>
         }
         right={

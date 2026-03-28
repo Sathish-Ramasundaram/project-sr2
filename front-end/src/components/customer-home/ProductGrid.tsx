@@ -1,4 +1,4 @@
-import ProductCard from '@/components/product/ProductCard';
+import ProductCard from '@/components/customer-home/ProductCard';
 import type { Product } from '@/types/product';
 
 type ProductGridProps = {

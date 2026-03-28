@@ -4,7 +4,7 @@ import AppHeader from '@/components/layout/AppHeader';
 import NotificationBellButton from '@/components/customer/NotificationBellButton';
 import PageMain from '@/components/layout/PageMain';
 import PageShell from '@/components/layout/PageShell';
-import StoreLogo from '@/components/shared/StoreLogo';
+import StoreLogo from '@/components/public/StoreLogo';
 import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
 import { graphqlRequest } from '@/api/graphqlClient';
 import {
@@ -39,7 +39,9 @@ function CustomerNotificationsPage() {
   const customerInitial = customerName.charAt(0).toUpperCase();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [notificationError, setNotificationError] = useState<string | null>(null);
+  const [notificationError, setNotificationError] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     if (!user?.id) {
@@ -88,7 +90,10 @@ function CustomerNotificationsPage() {
     return () => {
       window.clearInterval(intervalId);
       window.removeEventListener('focus', onFocus);
-      window.removeEventListener('notifications-updated', onNotificationsUpdated);
+      window.removeEventListener(
+        'notifications-updated',
+        onNotificationsUpdated
+      );
     };
   }, [loadNotifications]);
 
@@ -200,7 +205,9 @@ function CustomerNotificationsPage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-base font-semibold">{notification.title}</p>
+                    <p className="text-base font-semibold">
+                      {notification.title}
+                    </p>
                     <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
                       {notification.message}
                     </p>

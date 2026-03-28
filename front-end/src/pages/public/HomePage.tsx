@@ -8,7 +8,7 @@ import HeroSection from '@/components/public/HeroSection';
 import AboutContactSection from '@/components/public/AboutContactSection';
 import Footer from '@/components/layout/Footer';
 import LoginChooser from '@/components/public/LoginChooser';
-import { useLoginChooser } from '../../hooks/useLoginChooser';
+import { useLoginChooser } from '@/hooks/useLoginChooser';
 import './HomePage.css';
 
 function HomePage() {
@@ -18,7 +18,6 @@ function HomePage() {
   return (
     <PageShell>
       <AppHeader
-        left={<div />}
         right={
           <nav className="flex items-center gap-6 text-sm font-medium">
             <Link to="/catalogue" className="hover:underline">

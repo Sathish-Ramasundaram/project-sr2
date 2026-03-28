@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import AppHeader from '@/components/layout/AppHeader';
 import PageMain from '@/components/layout/PageMain';
 import PageShell from '@/components/layout/PageShell';
-import StoreLogo from '@/components/shared/StoreLogo';
+import StoreLogo from '@/components/public/StoreLogo';
 import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
 import CatalogueTable from '@/components/catalogue/CatalogueTable';
 import Filters from '@/components/catalogue/Filters';
@@ -15,7 +15,6 @@ import { useStudentData } from '@/pages/catalogue/useStudentData';
 type PriceSort = 'default' | 'low-to-high' | 'high-to-low';
 
 function CataloguePage() {
-
   const todayDate = new Date().toLocaleDateString('en-IN', {
     day: '2-digit',
     month: 'long',
@@ -26,7 +25,6 @@ function CataloguePage() {
   const [priceSort, setPriceSort] = useState<PriceSort>('default');
   const [reloadSignal, setReloadSignal] = useState(0);
 
-  
   const { visibleItems, groceryError, isGroceryLoading } = useCatalogueData(
     selectedCategory,
     priceSort,
@@ -50,12 +48,7 @@ function CataloguePage() {
   return (
     <PageShell>
       <AppHeader
-        left={
-          <StoreLogo
-            className="mt-2 h-12"
-            imgClassName="h-12 w-auto"
-          />
-        }
+        left={<StoreLogo className="mt-2 h-12" imgClassName="h-12 w-auto" />}
         right={
           <div className="flex items-center gap-2">
             <Link

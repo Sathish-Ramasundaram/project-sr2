@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AppHeader from '@/components/layout/AppHeader';
 import PageMain from '@/components/layout/PageMain';
 import PageShell from '@/components/layout/PageShell';
-import StoreLogo from '@/components/shared/StoreLogo';
+import StoreLogo from '@/components/public/StoreLogo';
 import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
 import { clearAdminSession } from '@/store/admin/adminStorage';
 
@@ -30,19 +30,14 @@ function AdminPageLayout({
   return (
     <PageShell>
       <AppHeader
-        left={
-          <StoreLogo
-            className="mt-2 h-12"
-            imgClassName="h-12 w-auto"
-          />
-        }
+        left={<StoreLogo className="mt-2 h-12" imgClassName="h-12 w-auto" />}
         right={
-          <div className="flex items-center gap-2">
+          <nav className="flex items-center gap-6 text-sm font-medium">
             {showDashboardButton ? (
               <button
                 type="button"
                 onClick={() => navigate('/admin/dashboard')}
-                className="rounded-md bg-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600"
+                className="rounded-md px-3 py-2 text-sm font-medium hover:underline"
               >
                 Dashboard
               </button>
@@ -55,7 +50,7 @@ function AdminPageLayout({
             >
               Logout
             </button>
-          </div>
+          </nav>
         }
       />
 

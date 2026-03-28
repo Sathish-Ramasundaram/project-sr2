@@ -4,7 +4,7 @@ import AppHeader from '@/components/layout/AppHeader';
 import NotificationBellButton from '@/components/customer/NotificationBellButton';
 import PageMain from '@/components/layout/PageMain';
 import PageShell from '@/components/layout/PageShell';
-import StoreLogo from '@/components/shared/StoreLogo';
+import StoreLogo from '@/components/public/StoreLogo';
 import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
 import { logout } from '@/store/auth/authSlice';
 import { loadCartCountRequest } from '@/store/cart/cartSlice';
@@ -182,7 +182,9 @@ function CustomerOrderHistoryPage() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium capitalize">{order.status}</p>
+                    <p className="text-sm font-medium capitalize">
+                      {order.status}
+                    </p>
                     <p className="text-lg font-bold">
                       {'\u20B9'}
                       {order.totalAmount}

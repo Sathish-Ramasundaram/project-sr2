@@ -2,7 +2,7 @@ import { Navigate } from 'react-router-dom';
 import AppHeader from '@/components/layout/AppHeader';
 import PageMain from '@/components/layout/PageMain';
 import PageShell from '@/components/layout/PageShell';
-import StoreLogo from '@/components/shared/StoreLogo';
+import StoreLogo from '@/components/public/StoreLogo';
 import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
 import RegisterForm from '@/components/customer/RegisterForm';
 import { useRegisterForm } from '@/pages/customer/auth/useRegisterForm';

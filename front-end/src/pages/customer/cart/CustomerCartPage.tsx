@@ -7,7 +7,7 @@ import PageShell from '@/components/layout/PageShell';
 import CartItemsList from '@/components/customer-cart/CartItemsList';
 import CheckoutAddressForm from '@/components/customer-cart/CheckoutAddressForm';
 import PaymentConfirmation from '@/components/customer-cart/PaymentConfirmation';
-import StoreLogo from '@/components/shared/StoreLogo';
+import StoreLogo from '@/components/public/StoreLogo';
 import ThemeToggleButton from '@/components/theme/ThemeToggleButton';
 import { logout } from '@/store/auth/authSlice';
 import { loadCartCountRequest } from '@/store/cart/cartSlice';
@@ -98,7 +98,9 @@ function CustomerCartPage() {
     navigate('/');
   };
 
-  const handlePlaceOrderWithCallback = async (paymentDetails: PaymentDetails) => {
+  const handlePlaceOrderWithCallback = async (
+    paymentDetails: PaymentDetails
+  ) => {
     const isSuccess = await placeOrder(cartItems, paymentDetails);
     if (isSuccess) {
       await refreshCartItems();
@@ -108,13 +110,7 @@ function CustomerCartPage() {
   return (
     <PageShell>
       <AppHeader
-        left={
-          <StoreLogo
-            className="h-12"
-            imgClassName="h-12 w-auto"
-            textClassName="text-xl font-bold"
-          />
-        }
+        left={<StoreLogo className="h-12" imgClassName="h-12 w-auto" />}
         right={
           <div className="flex items-center gap-3">
             <div
@@ -196,17 +192,20 @@ function CustomerCartPage() {
                   <div className="text-right">
                     {appliedDiscount > 0 ? (
                       <p className="text-sm text-slate-500 line-through dark:text-slate-400">
-                        {'\u20B9'}{totalAmount}
+                        {'\u20B9'}
+                        {totalAmount}
                       </p>
                     ) : null}
                     <p className="text-lg font-bold">
-                      {'\u20B9'}{Math.max(0, totalAmount - appliedDiscount)}
+                      {'\u20B9'}
+                      {Math.max(0, totalAmount - appliedDiscount)}
                     </p>
                   </div>
                 </div>
                 {appliedDiscount > 0 ? (
                   <p className="mt-2 text-sm text-emerald-700 dark:text-emerald-400">
-                    Discount: {'\u20B9'}{appliedDiscount}
+                    Discount: {'\u20B9'}
+                    {appliedDiscount}
                   </p>
                 ) : null}
               </div>
@@ -230,7 +229,9 @@ function CustomerCartPage() {
                     />
                     <button
                       type="button"
-                      onClick={() => user?.id && applyCoupon(totalAmount, user.id)}
+                      onClick={() =>
+                        user?.id && applyCoupon(totalAmount, user.id)
+                      }
                       className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
                     >
                       Apply
